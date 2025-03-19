@@ -1,0 +1,35 @@
+{
+    "firestore": {
+        "rules": "(firestore.rules)",
+        "indexes": "(firestore.indexes.json)"
+    },
+    "storage": {
+        "rules": "(storage.rules)"
+    },
+    "database": {
+        "rules": "database.rules.json"
+    },
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "you-can-cook-1b811",
+                    "appId": "1:358242017074:android:762cc4f00c6e314c30012b",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "you-can-cook-1b811",
+                    "configurations": {
+                        "android": "1:358242017074:android:762cc4f00c6e314c30012b",
+                        "ios": "1:358242017074:ios:03622a3cd83b459730012b",
+                        "macos": "1:358242017074:ios:03622a3cd83b459730012b",
+                        "web": "1:358242017074:web:62514ad3068c599230012b",
+                        "windows": "1:358242017074:web:c7d689067437d7d030012b"
+                    }
+                }
+            }
+        }
+    }
+}

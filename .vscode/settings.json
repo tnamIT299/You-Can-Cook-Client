@@ -1,0 +1,10 @@
+{
+    "editor.fontLigatures": false,
+    "dart.flutterCreateOrganization": null,
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit"
+    },
+    "editor.formatOnSave": true,
+    "dart.previewFlutterUiGuides": true
+
+}
