@@ -46,7 +46,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '358242017074',
     projectId: 'you-can-cook-1b811',
     authDomain: 'you-can-cook-1b811.firebaseapp.com',
-    databaseURL: 'https://you-can-cook-1b811-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://you-can-cook-1b811-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'you-can-cook-1b811.firebasestorage.app',
     measurementId: 'G-MG8PJ462BL',
   );
@@ -56,7 +57,8 @@ class DefaultFirebaseOptions {
     appId: '1:358242017074:android:762cc4f00c6e314c30012b',
     messagingSenderId: '358242017074',
     projectId: 'you-can-cook-1b811',
-    databaseURL: 'https://you-can-cook-1b811-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://you-can-cook-1b811-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'you-can-cook-1b811.firebasestorage.app',
   );
 
@@ -65,7 +67,8 @@ class DefaultFirebaseOptions {
     appId: '1:358242017074:ios:03622a3cd83b459730012b',
     messagingSenderId: '358242017074',
     projectId: 'you-can-cook-1b811',
-    databaseURL: 'https://you-can-cook-1b811-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://you-can-cook-1b811-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'you-can-cook-1b811.firebasestorage.app',
     iosBundleId: 'com.example.youCanCook',
   );
@@ -75,7 +78,8 @@ class DefaultFirebaseOptions {
     appId: '1:358242017074:ios:03622a3cd83b459730012b',
     messagingSenderId: '358242017074',
     projectId: 'you-can-cook-1b811',
-    databaseURL: 'https://you-can-cook-1b811-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://you-can-cook-1b811-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'you-can-cook-1b811.firebasestorage.app',
     iosBundleId: 'com.example.youCanCook',
   );
@@ -86,7 +90,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '358242017074',
     projectId: 'you-can-cook-1b811',
     authDomain: 'you-can-cook-1b811.firebaseapp.com',
-    databaseURL: 'https://you-can-cook-1b811-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://you-can-cook-1b811-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'you-can-cook-1b811.firebasestorage.app',
     measurementId: 'G-M81KGKHCS3',
   );
