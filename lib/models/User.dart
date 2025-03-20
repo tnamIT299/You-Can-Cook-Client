@@ -1,6 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 // lib/models/user.dart
 class User {
   final int uid;
@@ -14,6 +16,7 @@ class User {
   final int? follower;
   final int? following;
   final int? totalPoint;
+  final List<String>? badges;
   User({
     required this.uid,
     required this.name,
@@ -26,6 +29,7 @@ class User {
     this.follower,
     this.following,
     this.totalPoint,
+    this.badges,
   });
 
   User copyWith({
@@ -40,6 +44,7 @@ class User {
     int? follower,
     int? following,
     int? totalPoint,
+    List<String>? badges,
   }) {
     return User(
       uid: uid ?? this.uid,
@@ -53,6 +58,7 @@ class User {
       follower: follower ?? this.follower,
       following: following ?? this.following,
       totalPoint: totalPoint ?? this.totalPoint,
+      badges: badges ?? this.badges,
     );
   }
 
@@ -69,6 +75,7 @@ class User {
       'follower': follower,
       'following': following,
       'totalPoint': totalPoint,
+      'badges': badges,
     };
   }
 
@@ -86,6 +93,14 @@ class User {
       follower: map['follower'] != null ? map['follower'] as int : null,
       following: map['following'] != null ? map['following'] as int : null,
       totalPoint: map['totalPoint'] != null ? map['totalPoint'] as int : null,
+      badges:
+          map['badges'] != null
+              ? (map['badges'] is String
+                  ? jsonDecode(
+                    map['badges'] as String,
+                  ).map<String>((e) => e as String).toList()
+                  : List<String>.from(map['badges'] as List))
+              : null,
     );
   }
 
@@ -96,7 +111,7 @@ class User {
 
   @override
   String toString() {
-    return 'User(uid: $uid, name: $name, nickname: $nickname, email: $email, gender: $gender, avatar: $avatar, bio: $bio, onlineStatus: $onlineStatus, follower: $follower, following: $following, totalPoint: $totalPoint)';
+    return 'User(uid: $uid, name: $name, nickname: $nickname, email: $email, gender: $gender, avatar: $avatar, bio: $bio, onlineStatus: $onlineStatus, follower: $follower, following: $following, totalPoint: $totalPoint, badges: $badges)';
   }
 
   @override
@@ -113,7 +128,8 @@ class User {
         other.onlineStatus == onlineStatus &&
         other.follower == follower &&
         other.following == following &&
-        other.totalPoint == totalPoint;
+        other.totalPoint == totalPoint &&
+        listEquals(other.badges, badges);
   }
 
   @override
@@ -128,6 +144,7 @@ class User {
         onlineStatus.hashCode ^
         follower.hashCode ^
         following.hashCode ^
-        totalPoint.hashCode;
+        totalPoint.hashCode ^
+        badges.hashCode;
   }
 }

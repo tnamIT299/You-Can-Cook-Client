@@ -2,6 +2,8 @@ import 'package:redux/redux.dart';
 import 'actions.dart';
 import 'reducers.dart';
 import 'package:you_can_cook/services/UserService.dart';
+import 'package:you_can_cook/services/PostService.dart';
+import 'package:you_can_cook/db/db.dart';
 
 void appMiddleware(
   Store<AppState> store,
@@ -22,6 +24,19 @@ void appMiddleware(
       final userService = UserService();
       await userService.updateUserInfo(action.email, action.updates);
       store.dispatch(FetchUserInfo(action.email));
+    } catch (e) {
+      store.dispatch(SetError(e.toString()));
+    }
+  } else if (action is FetchUserPostsAndPhotos) {
+    store.dispatch(SetLoading(true));
+    try {
+      final postService = PostService(
+        supabaseClient,
+      ); // Đảm bảo supabaseClient được khởi tạo
+      final posts = await postService.fetchPostsByUid(action.uid);
+      final photos = await postService.fetchImagesByUid(action.uid);
+      store.dispatch(SetUserPosts(posts));
+      store.dispatch(SetUserPhotos(photos));
     } catch (e) {
       store.dispatch(SetError(e.toString()));
     }

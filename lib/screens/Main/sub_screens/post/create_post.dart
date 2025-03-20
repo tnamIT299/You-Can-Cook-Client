@@ -115,7 +115,7 @@ class _CreateNewPostScreenState extends State<CreateNewPostScreen> {
       converter: (store) => store.state.userInfo,
       builder: (context, userInfo) {
         if (userInfo == null) {
-          return const LoadingScreen(); // Sử dụng LoadingScreen khi dữ liệu chưa tải xong
+          return const LoadingScreen();
         }
 
         return Scaffold(

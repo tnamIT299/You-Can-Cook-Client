@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:you_can_cook/helper/pick_Image.dart';
 import 'package:you_can_cook/models/User.dart' as userModel;
@@ -107,9 +109,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 CircleAvatar(
                   radius: 50,
                   backgroundImage:
-                      _avatar.startsWith('assets')
-                          ? AssetImage(_avatar)
-                          : NetworkImage(_avatar) as ImageProvider,
+                      _avatar.startsWith('assets') || _avatar.startsWith('http')
+                          ? NetworkImage(_avatar) as ImageProvider
+                          : FileImage(File(_avatar)),
                 ),
                 Container(
                   height: 30,

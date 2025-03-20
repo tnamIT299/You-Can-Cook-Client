@@ -74,13 +74,17 @@ class Post {
       pimage:
           map['pimage'] != null
               ? (map['pimage'] is String
-                  ? [map['pimage'] as String]
+                  ? jsonDecode(
+                    map['pimage'] as String,
+                  ).map<String>((e) => e as String).toList()
                   : List<String>.from(map['pimage'] as List))
               : null,
       phashtag:
           map['phashtag'] != null
               ? (map['phashtag'] is String
-                  ? [map['phashtag'] as String]
+                  ? jsonDecode(
+                    map['phashtag'] as String,
+                  ).map<String>((e) => e as String).toList()
                   : List<String>.from(map['phashtag'] as List))
               : null,
       plike: map['plike'] != null ? map['plike'] as int : null,
