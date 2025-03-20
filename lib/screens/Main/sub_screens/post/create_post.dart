@@ -11,6 +11,7 @@ import 'package:you_can_cook/models/Post.dart';
 import 'package:you_can_cook/services/PostService.dart';
 import 'package:supabase/supabase.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:you_can_cook/widgets/loading_screen.dart'; // Import LoadingScreen
 
 class CreateNewPostScreen extends StatefulWidget {
   const CreateNewPostScreen({super.key});
@@ -114,11 +115,11 @@ class _CreateNewPostScreenState extends State<CreateNewPostScreen> {
       converter: (store) => store.state.userInfo,
       builder: (context, userInfo) {
         if (userInfo == null) {
-          return const Center(child: CircularProgressIndicator());
+          return const LoadingScreen(); // Sử dụng LoadingScreen khi dữ liệu chưa tải xong
         }
 
         return Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.white, // Đảm bảo màu nền trắng
           appBar: AppBar(
             backgroundColor: const Color(0xFFEEA734),
             leading: IconButton(

@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:you_can_cook/redux/actions.dart';
 import 'package:you_can_cook/redux/reducers.dart';
 import 'package:you_can_cook/screens/Main/sub_screens/profile/edit_profile.dart';
+import 'package:you_can_cook/widgets/loading_screen.dart';
 
 class ProfileTab extends StatefulWidget {
   ProfileTab({super.key});
@@ -103,7 +104,7 @@ class _ProfileTabState extends State<ProfileTab>
         converter: (store) => store.state,
         builder: (context, state) {
           if (state.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const LoadingScreen(); // Sử dụng LoadingScreen khi dữ liệu chưa tải xong
           } else if (state.errorMessage != null) {
             return Center(child: Text(state.errorMessage!));
           } else if (state.userInfo != null) {
