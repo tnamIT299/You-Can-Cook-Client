@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:you_can_cook/models/User.dart' as userModel;
 
@@ -26,6 +25,26 @@ class UserService {
     if (response != null) {
       throw Exception('Failed to update user info: $response');
     }
+  }
+
+  Future<void> updateUserPoints(int uid, int points) async {
+    final response = await _supabase
+        .from('users')
+        .update({'totalPoint': points})
+        .eq('uid', uid);
+    if (response != null) {
+      throw Exception('Failed to update points: ${response.error!.message}');
+    }
+  }
+
+  Future<int> getUserPoints(int uid) async {
+    final response =
+        await _supabase
+            .from('users')
+            .select('totalPoint')
+            .eq('uid', uid)
+            .single();
+    return response['totalPoint'] ?? 0;
   }
 
   // Upload avatar lên Supabase Storage

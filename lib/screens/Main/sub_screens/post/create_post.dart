@@ -11,8 +11,10 @@ import 'package:you_can_cook/models/Post.dart';
 import 'package:you_can_cook/services/PostService.dart';
 import 'package:supabase/supabase.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:you_can_cook/services/UserService.dart';
 import 'package:you_can_cook/widgets/loading_screen.dart';
 import 'package:you_can_cook/utils/color.dart';
+import 'package:you_can_cook/db/db.dart';
 
 class CreateNewPostScreen extends StatefulWidget {
   const CreateNewPostScreen({super.key});
@@ -29,21 +31,15 @@ class _CreateNewPostScreenState extends State<CreateNewPostScreen> {
   final TextEditingController contentController = TextEditingController();
   final TextEditingController hashtagController = TextEditingController();
 
-  late final SupabaseClient _client;
+  //late final SupabaseClient _client;
   late final PostService _postService;
+  late final UserService _userService;
 
   @override
   void initState() {
     super.initState();
-    final supabaseUrl = dotenv.env['SUPABASE_URL'];
-    final supabaseKey = dotenv.env['SUPABASE_KEY'];
-
-    if (supabaseUrl == null || supabaseKey == null) {
-      throw Exception('Supabase URL and Key must be provided');
-    }
-
-    _client = SupabaseClient(supabaseUrl, supabaseKey);
-    _postService = PostService(_client);
+    _postService = PostService(supabaseClient);
+    _userService = UserService();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final store = StoreProvider.of<AppState>(context);
@@ -99,6 +95,8 @@ class _CreateNewPostScreenState extends State<CreateNewPostScreen> {
       );
 
       await _postService.createPost(post);
+      final currentPoint = await _userService.getUserPoints(userInfo.uid);
+      await _userService.updateUserPoints(userInfo.uid, currentPoint + 5);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Bài đăng đã được tạo thành công")),
       );

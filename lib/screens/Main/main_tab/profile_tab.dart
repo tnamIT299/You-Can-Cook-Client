@@ -47,6 +47,14 @@ class _ProfileTabState extends State<ProfileTab>
     });
   }
 
+  Future<void> _refreshData() async {
+    final store = StoreProvider.of<AppState>(context, listen: false);
+    final uid = store.state.userInfo?.uid;
+    if (uid != null) {
+      store.dispatch(FetchUserPostsAndPhotos(uid));
+    }
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -100,161 +108,177 @@ class _ProfileTabState extends State<ProfileTab>
               });
             }
 
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 5.0,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.white,
-                        backgroundImage:
-                            userInfo.avatar != null
-                                ? NetworkImage(userInfo.avatar!)
-                                : const AssetImage("assets/icons/logo.png")
-                                    as ImageProvider,
+            return RefreshIndicator(
+              onRefresh: _refreshData,
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 5.0,
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 50,
+                            backgroundColor: Colors.white,
+                            backgroundImage:
+                                userInfo.avatar != null
+                                    ? NetworkImage(userInfo.avatar!)
+                                    : const AssetImage("assets/icons/logo.png")
+                                        as ImageProvider,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    userInfo.name,
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        userInfo.name,
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.edit,
+                                        color: Colors.grey,
+                                      ),
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => EditProfileScreen(
+                                                  userInfo: userInfo,
+                                                ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                if (userInfo.nickname != null) ...[
+                                  Text(
+                                    userInfo.nickname!,
                                     style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      overflow: TextOverflow.ellipsis,
+                                      fontSize: 16,
+                                      color: Colors.grey,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1,
                                   ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.edit,
-                                    color: Colors.grey,
-                                  ),
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) => EditProfileScreen(
-                                              userInfo: userInfo,
-                                            ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                            if (userInfo.nickname != null) ...[
-                              Text(
-                                userInfo.nickname!,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                              const SizedBox(height: 16),
-                            ],
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                _buildStatColumn(
-                                  "Follower",
-                                  userInfo.follower ?? 0,
-                                ),
-                                _buildStatColumn("Thích", 0),
-                                _buildStatColumn(
-                                  "Bài đăng",
-                                  state.userPosts.length,
+                                  const SizedBox(height: 16),
+                                ],
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    _buildStatColumn(
+                                      "Follower",
+                                      userInfo.follower ?? 0,
+                                    ),
+                                    _buildStatColumn("Thích", 0),
+                                    _buildStatColumn(
+                                      "Bài đăng",
+                                      state.userPosts.length,
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                if (userInfo.bio != null && userInfo.bio!.isNotEmpty) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      userInfo.bio!,
-                      style: const TextStyle(fontSize: 16, color: Colors.grey),
                     ),
                   ),
-                  SizedBox(height: 16),
-                ],
-                TabBar(
-                  controller: _tabController,
-                  labelColor: Colors.black,
-                  unselectedLabelColor: Colors.grey,
-                  indicatorColor: Colors.black,
-                  tabs: const [
-                    Tab(text: "Bài đăng"),
-                    Tab(text: "Ảnh"),
-                    Tab(text: "Huy hiệu"),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      // Posts Tab
-                      state.userPosts.isEmpty
-                          ? const Center(child: Text("Chưa có bài đăng nào"))
-                          : GridView.builder(
-                            padding: const EdgeInsets.all(8.0),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  crossAxisSpacing: 8.0,
-                                  mainAxisSpacing: 8.0,
-                                  childAspectRatio: 0.8,
-                                ),
-                            itemCount: state.userPosts.length,
-                            itemBuilder: (context, index) {
-                              return CardPostProfile(
-                                post: state.userPosts[index],
-                              );
-                            },
+                  if (userInfo.bio != null && userInfo.bio!.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0,
+                          vertical: 16.0,
+                        ),
+                        child: Center(
+                          child: Text(
+                            userInfo.bio!,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
                           ),
-                      // Photos Tab
-                      state.userPhotos.isEmpty
-                          ? const Center(child: Text("Chưa có ảnh nào"))
-                          : CardPhotoProfile(photos: state.userPhotos),
-                      // Badges Tab
-                      userInfo.badges == null || userInfo.badges!.isEmpty
-                          ? const Center(child: Text("Chưa có huy hiệu nào"))
-                          : CardBadgesTab(
-                            badges:
-                                userInfo.badges!
-                                    .map(
-                                      (badge) => {
-                                        "image": "assets/icons/logo.png",
-                                        "name": badge,
-                                      },
-                                    )
-                                    .toList(),
-                          ),
-                    ],
+                        ),
+                      ),
+                    ),
+                  SliverToBoxAdapter(
+                    child: TabBar(
+                      controller: _tabController,
+                      labelColor: Colors.black,
+                      unselectedLabelColor: Colors.grey,
+                      indicatorColor: Colors.black,
+                      tabs: const [
+                        Tab(text: "Bài đăng"),
+                        Tab(text: "Ảnh"),
+                        Tab(text: "Huy hiệu"),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  SliverFillRemaining(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        // Posts Tab
+                        state.userPosts.isEmpty
+                            ? const Center(child: Text("Chưa có bài đăng nào"))
+                            : GridView.builder(
+                              padding: const EdgeInsets.all(8.0),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 8.0,
+                                    mainAxisSpacing: 8.0,
+                                    childAspectRatio: 0.8,
+                                  ),
+                              itemCount: state.userPosts.length,
+                              itemBuilder: (context, index) {
+                                return CardPostProfile(
+                                  post: state.userPosts[index],
+                                );
+                              },
+                            ),
+                        // Photos Tab
+                        state.userPhotos.isEmpty
+                            ? const Center(child: Text("Chưa có ảnh nào"))
+                            : CardPhotoProfile(photos: state.userPhotos),
+                        // Badges Tab
+                        userInfo.badges == null || userInfo.badges!.isEmpty
+                            ? const Center(child: Text("Chưa có huy hiệu nào"))
+                            : CardBadgesTab(
+                              badges:
+                                  userInfo.badges!
+                                      .map(
+                                        (badge) => {
+                                          "image": "assets/icons/logo.png",
+                                          "name": badge,
+                                        },
+                                      )
+                                      .toList(),
+                            ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             );
           }
           // Trường hợp mặc định khi chưa có dữ liệu
