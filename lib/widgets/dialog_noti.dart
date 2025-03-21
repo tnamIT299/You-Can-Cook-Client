@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:you_can_cook/utils/color.dart';
 
-void show_Dialog(BuildContext context, String title, String content, VoidCallback onOkPressed) {
+void show_Dialog(
+  BuildContext context,
+  String title,
+  String content,
+  VoidCallback onOkPressed,
+) {
   showDialog(
     context: context,
-    barrierDismissible: false, // Không cho phép đóng dialog bằng cách nhấn ra ngoài
+    barrierDismissible:
+        false, // Không cho phép đóng dialog bằng cách nhấn ra ngoài
     builder: (BuildContext context) {
       return AlertDialog(
         title: Text(title),
@@ -14,10 +21,7 @@ void show_Dialog(BuildContext context, String title, String content, VoidCallbac
               Navigator.of(context).pop(); // Đóng dialog
               onOkPressed(); // Thực hiện hành động khi nhấn nút "OK"
             },
-            child: Text(
-              'OK',
-              style: TextStyle(color: Color(0xFFEEA734)),
-            ),
+            child: Text('OK', style: TextStyle(color: AppColors.primary)),
           ),
         ],
       );

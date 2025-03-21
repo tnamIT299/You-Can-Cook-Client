@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:you_can_cook/screens/Main/sub_tab/chefsTabSearch.dart';
 import 'package:you_can_cook/screens/Main/sub_tab/recipesTabSearch.dart';
 import 'package:you_can_cook/screens/Main/sub_tab/tagTabSearch.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 class ExploreTab extends StatefulWidget {
   const ExploreTab({super.key});
@@ -10,7 +11,8 @@ class ExploreTab extends StatefulWidget {
   _ExploreTabState createState() => _ExploreTabState();
 }
 
-class _ExploreTabState extends State<ExploreTab> with SingleTickerProviderStateMixin {
+class _ExploreTabState extends State<ExploreTab>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -27,11 +29,31 @@ class _ExploreTabState extends State<ExploreTab> with SingleTickerProviderStateM
 
   // Dữ liệu giả cho Recipes
   final List<Map<String, dynamic>> recipes = [
-    {"title": "Chocolate cake with buttercream frosting", "rating": 4.8, "image": "assets/icons/logo.png"},
-    {"title": "Chocolate cake with buttercream frosting", "rating": 4.8, "image": "assets/icons/logo.png"},
-    {"title": "Chocolate cake with buttercream frosting", "rating": 4.8, "image": "assets/icons/logo.png"},
-    {"title": "Chocolate cake with buttercream frosting", "rating": 4.8, "image": "assets/icons/logo.png"},
-    {"title": "Chocolate cake with buttercream frosting", "rating": 4.8, "image": "assets/icons/logo.png"},
+    {
+      "title": "Chocolate cake with buttercream frosting",
+      "rating": 4.8,
+      "image": "assets/icons/logo.png",
+    },
+    {
+      "title": "Chocolate cake with buttercream frosting",
+      "rating": 4.8,
+      "image": "assets/icons/logo.png",
+    },
+    {
+      "title": "Chocolate cake with buttercream frosting",
+      "rating": 4.8,
+      "image": "assets/icons/logo.png",
+    },
+    {
+      "title": "Chocolate cake with buttercream frosting",
+      "rating": 4.8,
+      "image": "assets/icons/logo.png",
+    },
+    {
+      "title": "Chocolate cake with buttercream frosting",
+      "rating": 4.8,
+      "image": "assets/icons/logo.png",
+    },
   ];
 
   // Dữ liệu giả cho Chefs
@@ -48,7 +70,7 @@ class _ExploreTabState extends State<ExploreTab> with SingleTickerProviderStateM
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Color(0xFFEEA734),
+        backgroundColor: AppColors.primary,
         title: Container(
           height: 40,
           decoration: BoxDecoration(
@@ -99,8 +121,3 @@ class _ExploreTabState extends State<ExploreTab> with SingleTickerProviderStateM
     );
   }
 }
-
-
-
-
-

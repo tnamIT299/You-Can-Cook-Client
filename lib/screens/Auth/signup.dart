@@ -5,6 +5,7 @@ import 'package:you_can_cook/services/AuthService.dart';
 import 'package:you_can_cook/screens/Main/home.dart';
 import 'package:you_can_cook/helper/validationEmail.dart';
 import 'package:you_can_cook/widgets/dialog_noti.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -68,11 +69,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         title: Center(
           child: Text(
             'Tạo Tài Khoản',
@@ -94,7 +95,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               SizedBox(height: 10),
               Text(
                 'Vui lòng nhập tên, địa chỉ email và mật khẩu để tạo tài khoản. Bạn đã có tài khoản chưa?',
-                style: TextStyle(fontSize: 14, color: Color(0xFFEEA734)),
+                style: TextStyle(fontSize: 14, color: AppColors.primary),
               ),
               if (_errorMessage.isNotEmpty)
                 Padding(
@@ -175,7 +176,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ElevatedButton(
                 onPressed: _signUpWithEmailAndPassword, // Gọi hàm đăng ký
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFEEA734),
+                  backgroundColor: AppColors.primary,
                   padding: EdgeInsets.symmetric(vertical: 15),
                   minimumSize: Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(
@@ -216,7 +217,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   },
                   child: Text(
                     'Bạn đã có tài khoản? Đăng nhập ngay!',
-                    style: TextStyle(color: Color(0xFFEEA734), fontSize: 14),
+                    style: TextStyle(color: AppColors.primary, fontSize: 14),
                   ),
                 ),
               ),

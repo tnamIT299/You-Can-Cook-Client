@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'confirm_send.dart';
 import 'package:you_can_cook/helper/validationEmail.dart';
 import 'package:you_can_cook/services/AuthService.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 class ForgetPasswordScreen extends StatefulWidget {
   const ForgetPasswordScreen({super.key});
@@ -54,11 +55,11 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => Navigator.pop(context),
@@ -75,7 +76,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
           children: [
             Text(
               'Nhập địa chỉ email để nhận hướng dẫn đặt lại mật khẩu.',
-              style: TextStyle(fontSize: 14, color: Color(0xFFEEA734)),
+              style: TextStyle(fontSize: 14, color: AppColors.primary),
             ),
             SizedBox(height: 20),
             TextField(
@@ -107,7 +108,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                 : ElevatedButton(
                   onPressed: _sendPasswordResetEmail,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFEEA734),
+                    backgroundColor: AppColors.primary,
                     padding: EdgeInsets.symmetric(vertical: 15),
                     minimumSize: Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(

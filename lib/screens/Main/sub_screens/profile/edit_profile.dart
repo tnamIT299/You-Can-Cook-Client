@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:you_can_cook/helper/pick_Image.dart';
 import 'package:you_can_cook/models/User.dart' as userModel;
@@ -7,6 +6,7 @@ import 'package:you_can_cook/services/UserService.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:you_can_cook/redux/actions.dart';
 import 'package:you_can_cook/redux/reducers.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final userModel.User userInfo;
@@ -77,7 +77,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFFEEA734)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.primary),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -93,7 +93,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.check, color: Color(0xFFEEA734)),
+            icon: const Icon(Icons.check, color: AppColors.primary),
             onPressed: _saveProfile,
           ),
         ],

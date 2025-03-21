@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 class CardPost extends StatelessWidget {
   const CardPost({super.key, required this.post});
@@ -40,7 +41,7 @@ class CardPost extends StatelessWidget {
                     IconButton(
                       icon: const Icon(
                         Icons.favorite_border,
-                        color: Color(0xFFEEA734),
+                        color: AppColors.primary,
                       ),
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -59,7 +60,7 @@ class CardPost extends StatelessWidget {
                 Row(
                   children: [
                     IconButton(
-                      color: Color(0xFFEEA734),
+                      color: AppColors.primary,
                       icon: const Icon(Icons.comment),
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -78,7 +79,7 @@ class CardPost extends StatelessWidget {
                 Row(
                   children: [
                     IconButton(
-                      color: Color(0xFFEEA734),
+                      color: AppColors.primary,
                       icon: const Icon(Icons.bookmark_border),
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(

@@ -12,6 +12,7 @@ import 'package:you_can_cook/screens/Main/sub_screens/profile/edit_profile.dart'
 import 'package:you_can_cook/widgets/loading_screen.dart';
 import 'package:supabase/supabase.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 class ProfileTab extends StatefulWidget {
   ProfileTab({super.key});
@@ -55,10 +56,10 @@ class _ProfileTabState extends State<ProfileTab>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         actions: [
           IconButton(

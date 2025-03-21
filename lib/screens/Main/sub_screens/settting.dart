@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:you_can_cook/services/AuthService.dart';
 import 'package:you_can_cook/screens/Auth/login.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 class SettingsScreen extends StatelessWidget {
   SettingsScreen({super.key});
@@ -73,7 +74,7 @@ class SettingsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: const Color(0xFFEEA734),
+        backgroundColor: AppColors.primary,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -93,7 +94,7 @@ class SettingsScreen extends StatelessWidget {
           // Thanh tìm kiếm
           Container(
             height: 70,
-            color: const Color(0xFFEEA734),
+            color: AppColors.primary,
             padding: const EdgeInsets.all(10.0),
             child: Container(
               padding: const EdgeInsets.symmetric(
@@ -140,12 +141,12 @@ class SettingsScreen extends StatelessWidget {
                           ? Switch(
                             value: item["trailing"],
                             onChanged: (value) {},
-                            activeColor: const Color(0xFFEEA734),
+                            activeColor: AppColors.primary,
                           )
                           : item["trailing"] is String
                           ? Text(
                             item["trailing"],
-                            style: const TextStyle(color: Color(0xFFEEA734)),
+                            style: const TextStyle(color: AppColors.primary),
                           )
                           : Icon(item["trailing"], color: Colors.grey),
                   onTap: () {

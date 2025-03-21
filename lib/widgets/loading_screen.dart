@@ -1,6 +1,5 @@
-// lib/widgets/loading_screen.dart
-
 import 'package:flutter/material.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 class LoadingScreen extends StatelessWidget {
   const LoadingScreen({super.key});
@@ -8,7 +7,7 @@ class LoadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Màu nền trắng
+      backgroundColor: AppColors.background, // Màu nền trắng
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

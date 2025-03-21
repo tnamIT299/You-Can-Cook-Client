@@ -4,6 +4,7 @@ import 'package:you_can_cook/screens/Main/main_tab/explore_tab.dart';
 import 'package:you_can_cook/screens/Main/main_tab/chatAI_tab.dart';
 import 'package:you_can_cook/screens/Main/main_tab/ranked_tab.dart';
 import 'package:you_can_cook/screens/Main/main_tab/profile_tab.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -40,13 +41,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: SafeArea(child: _screens[_selectedIndex]),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: Color(0xFFEEA734),
+        selectedItemColor: AppColors.primary,
         unselectedItemColor: Color(0xFF868686),
         showSelectedLabels: true,
         showUnselectedLabels: true,

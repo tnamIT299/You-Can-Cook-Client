@@ -12,7 +12,7 @@ import 'screens/SplashScreen/splash.dart';
 //import 'package:device_preview/device_preview.dart';
 import 'package:you_can_cook/screens/Main/home.dart';
 import 'package:you_can_cook/db/db.dart';
-//import 'package:you_can_cook/db/test.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 // void main() {
 //   runApp(DevicePreview(
@@ -50,7 +50,7 @@ class MyApp extends StatelessWidget {
         title: 'Flutter Demo',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          scaffoldBackgroundColor: Colors.white,
+          scaffoldBackgroundColor: AppColors.background,
         ),
         home: AuthWrapper(),
       ),

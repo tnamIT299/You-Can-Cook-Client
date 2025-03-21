@@ -7,6 +7,7 @@ import 'package:you_can_cook/screens/Main/home.dart';
 import 'signupWithPhone.dart';
 import 'package:you_can_cook/services/AuthService.dart';
 import 'package:you_can_cook/helper/validationEmail.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -60,11 +61,11 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         title: Center(
           child: Text(
             'Đăng Nhập',
@@ -85,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               Text(
                 'Chào mừng bạn đến với You Can Cook! Hãy thưởng thức các món ăn ngon cùng chúng tôi.',
-                style: TextStyle(fontSize: 16, color: Color(0xFFEEA734)),
+                style: TextStyle(fontSize: 16, color: AppColors.primary),
               ),
               if (_errorMessage.isNotEmpty)
                 Padding(
@@ -161,14 +162,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   child: Text(
                     'Quên mật khẩu?',
-                    style: TextStyle(color: Color(0xFFEEA734), fontSize: 14),
+                    style: TextStyle(color: AppColors.primary, fontSize: 14),
                   ),
                 ),
               ),
               ElevatedButton(
                 onPressed: _loginWithFirebase,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFEEA734),
+                  backgroundColor: AppColors.primary,
                   padding: EdgeInsets.symmetric(vertical: 10),
                   minimumSize: Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(
@@ -201,7 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   child: Text(
                     'Bạn chưa có tài khoản? Đăng ký ngay!',
-                    style: TextStyle(color: Color(0xFFEEA734), fontSize: 14),
+                    style: TextStyle(color: AppColors.primary, fontSize: 14),
                   ),
                 ),
               ),

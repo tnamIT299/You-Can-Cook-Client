@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'login.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 class SignUpWithPhoneScreen extends StatefulWidget {
+  const SignUpWithPhoneScreen({super.key});
+
   @override
   _SignUpWithPhoneScreenState createState() => _SignUpWithPhoneScreenState();
 }
 
 class _SignUpWithPhoneScreenState extends State<SignUpWithPhoneScreen> {
   final TextEditingController _fullNameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController(); 
-  final TextEditingController _otpController = TextEditingController(); 
-  bool _obscurePassword = true; 
-  String _errorMessage = ''; 
-  String? _verificationId; 
-  bool _isCodeSent = false; 
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
+  final bool _obscurePassword = true;
+  String _errorMessage = '';
+  String? _verificationId;
+  bool _isCodeSent = false;
 
   void _showSuccessDialog(BuildContext context) {
     showDialog(
@@ -27,16 +30,13 @@ class _SignUpWithPhoneScreenState extends State<SignUpWithPhoneScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); 
+                Navigator.of(context).pop();
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => LoginScreen()),
                 );
               },
-              child: Text(
-                'OK',
-                style: TextStyle(color: Color(0xFFEEA734)),
-              ),
+              child: Text('OK', style: TextStyle(color: AppColors.primary)),
             ),
           ],
         );
@@ -45,7 +45,9 @@ class _SignUpWithPhoneScreenState extends State<SignUpWithPhoneScreen> {
   }
 
   bool _isValidPhoneNumber(String phone) {
-    final phoneRegex = RegExp(r'^\+[1-9]\d{1,14}$'); // Định dạng quốc tế: + mã quốc gia + số điện thoại
+    final phoneRegex = RegExp(
+      r'^\+[1-9]\d{1,14}$',
+    ); // Định dạng quốc tế: + mã quốc gia + số điện thoại
     return phoneRegex.hasMatch(phone);
   }
 
@@ -75,7 +77,9 @@ class _SignUpWithPhoneScreenState extends State<SignUpWithPhoneScreen> {
       verificationCompleted: (PhoneAuthCredential credential) async {
         // Tự động hoàn tất xác minh (thường trên Android nếu mã OTP được tự động phát hiện)
         await FirebaseAuth.instance.signInWithCredential(credential);
-        await FirebaseAuth.instance.currentUser?.updateDisplayName(_fullNameController.text.trim());
+        await FirebaseAuth.instance.currentUser?.updateDisplayName(
+          _fullNameController.text.trim(),
+        );
         _showSuccessDialog(context);
       },
       verificationFailed: (FirebaseAuthException e) {
@@ -112,7 +116,9 @@ class _SignUpWithPhoneScreenState extends State<SignUpWithPhoneScreen> {
         smsCode: _otpController.text.trim(),
       );
       await FirebaseAuth.instance.signInWithCredential(credential);
-      await FirebaseAuth.instance.currentUser?.updateDisplayName(_fullNameController.text.trim());
+      await FirebaseAuth.instance.currentUser?.updateDisplayName(
+        _fullNameController.text.trim(),
+      );
       _showSuccessDialog(context);
     } catch (e) {
       setState(() {
@@ -132,10 +138,10 @@ class _SignUpWithPhoneScreenState extends State<SignUpWithPhoneScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () {
@@ -144,25 +150,24 @@ class _SignUpWithPhoneScreenState extends State<SignUpWithPhoneScreen> {
         ),
         title: Text(
           'Create Account',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 22,
-          ),
+          style: TextStyle(color: Colors.black, fontSize: 22),
         ),
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.only(left: 15, right: 15, top: 0, bottom: 10),
+          padding: const EdgeInsets.only(
+            left: 15,
+            right: 15,
+            top: 0,
+            bottom: 10,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 10),
               Text(
                 'Enter your Phone Number for sign up. Already have account?',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFFEEA734),
-                ),
+                style: TextStyle(fontSize: 14, color: AppColors.primary),
               ),
               if (_errorMessage.isNotEmpty) // Hiển thị thông báo lỗi
                 Padding(
@@ -170,7 +175,10 @@ class _SignUpWithPhoneScreenState extends State<SignUpWithPhoneScreen> {
                   child: Text(
                     _errorMessage,
                     style: TextStyle(
-                      color: _errorMessage.contains('OTP sent') ? Colors.green : Colors.red,
+                      color:
+                          _errorMessage.contains('OTP sent')
+                              ? Colors.green
+                              : Colors.red,
                       fontSize: 14,
                     ),
                   ),
@@ -184,9 +192,10 @@ class _SignUpWithPhoneScreenState extends State<SignUpWithPhoneScreen> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
-                  suffixIcon: _fullNameController.text.isNotEmpty
-                      ? Icon(Icons.check, color: Colors.green)
-                      : null,
+                  suffixIcon:
+                      _fullNameController.text.isNotEmpty
+                          ? Icon(Icons.check, color: Colors.green)
+                          : null,
                   filled: true,
                   fillColor: Colors.white,
                 ),
@@ -202,9 +211,11 @@ class _SignUpWithPhoneScreenState extends State<SignUpWithPhoneScreen> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
-                  suffixIcon: _phoneController.text.isNotEmpty && _isValidPhoneNumber(_phoneController.text)
-                      ? Icon(Icons.check, color: Colors.green)
-                      : null,
+                  suffixIcon:
+                      _phoneController.text.isNotEmpty &&
+                              _isValidPhoneNumber(_phoneController.text)
+                          ? Icon(Icons.check, color: Colors.green)
+                          : null,
                   filled: true,
                   fillColor: Colors.white,
                 ),
@@ -232,9 +243,12 @@ class _SignUpWithPhoneScreenState extends State<SignUpWithPhoneScreen> {
               SizedBox(height: 20),
               // Nút SIGN UP
               ElevatedButton(
-                onPressed: _isCodeSent ? _verifyOTP : _sendOTP, // Gửi OTP hoặc xác minh OTP
+                onPressed:
+                    _isCodeSent
+                        ? _verifyOTP
+                        : _sendOTP, // Gửi OTP hoặc xác minh OTP
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFEEA734),
+                  backgroundColor: AppColors.primary,
                   padding: EdgeInsets.symmetric(vertical: 15),
                   minimumSize: Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(
@@ -254,10 +268,7 @@ class _SignUpWithPhoneScreenState extends State<SignUpWithPhoneScreen> {
               Center(
                 child: Text(
                   'By Signing up you agree to our Terms Conditions & Privacy Policy.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -266,10 +277,7 @@ class _SignUpWithPhoneScreenState extends State<SignUpWithPhoneScreen> {
               Center(
                 child: Text(
                   'Or',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
               ),
               // Nút CONNECT WITH FACEBOOK
@@ -280,10 +288,7 @@ class _SignUpWithPhoneScreenState extends State<SignUpWithPhoneScreen> {
                 icon: Icon(Icons.facebook, color: Colors.white),
                 label: Text(
                   'CONNECT WITH FACEBOOK',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xff395998),
@@ -303,10 +308,7 @@ class _SignUpWithPhoneScreenState extends State<SignUpWithPhoneScreen> {
                 icon: Icon(Icons.email, color: Colors.white),
                 label: Text(
                   'CONNECT WITH GOOGLE',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xff4285F4),

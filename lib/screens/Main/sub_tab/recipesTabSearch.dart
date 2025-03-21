@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 class RecipesTabSearch extends StatelessWidget {
   const RecipesTabSearch({super.key, required this.recipes});
@@ -19,6 +20,7 @@ class RecipesTabSearch extends StatelessWidget {
       itemBuilder: (context, index) {
         final recipe = recipes[index];
         return Card(
+          color: AppColors.background,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -38,7 +40,7 @@ class RecipesTabSearch extends StatelessWidget {
                   children: [
                     const Icon(
                       Icons.favorite_outlined,
-                      color: Color(0xFFEEA734),
+                      color: AppColors.primary,
                       size: 16,
                     ),
                     const SizedBox(width: 4),

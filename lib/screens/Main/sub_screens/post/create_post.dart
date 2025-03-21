@@ -11,7 +11,8 @@ import 'package:you_can_cook/models/Post.dart';
 import 'package:you_can_cook/services/PostService.dart';
 import 'package:supabase/supabase.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:you_can_cook/widgets/loading_screen.dart'; // Import LoadingScreen
+import 'package:you_can_cook/widgets/loading_screen.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 class CreateNewPostScreen extends StatefulWidget {
   const CreateNewPostScreen({super.key});
@@ -121,7 +122,7 @@ class _CreateNewPostScreenState extends State<CreateNewPostScreen> {
         return Scaffold(
           backgroundColor: Colors.white, // Đảm bảo màu nền trắng
           appBar: AppBar(
-            backgroundColor: const Color(0xFFEEA734),
+            backgroundColor: AppColors.primary,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
               onPressed: () => Navigator.pop(context),
@@ -173,7 +174,7 @@ class _CreateNewPostScreenState extends State<CreateNewPostScreen> {
                       height: 30,
                       padding: const EdgeInsets.symmetric(horizontal: 2),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEEA734),
+                        color: AppColors.primary,
                         borderRadius: BorderRadius.circular(5),
                       ),
                       child: DropdownButton<String>(
@@ -186,7 +187,7 @@ class _CreateNewPostScreenState extends State<CreateNewPostScreen> {
                                 child: Text(
                                   value,
                                   style: const TextStyle(
-                                    color: Color(0xFFEEA734),
+                                    color: AppColors.primary,
                                   ),
                                 ),
                               );
@@ -263,10 +264,10 @@ class _CreateNewPostScreenState extends State<CreateNewPostScreen> {
                 const SizedBox(height: 8),
                 TextButton.icon(
                   onPressed: _pickImage,
-                  icon: const Icon(Icons.add_a_photo, color: Color(0xFFEEA734)),
+                  icon: const Icon(Icons.add_a_photo, color: AppColors.primary),
                   label: const Text(
                     "Thêm ảnh",
-                    style: TextStyle(color: Color(0xFFEEA734)),
+                    style: TextStyle(color: AppColors.primary),
                   ),
                 ),
                 const SizedBox(height: 16),

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'slide.dart';
-import 'package:you_can_cook/screens/Auth/login.dart'; // Import màn hình Login
+import 'package:you_can_cook/screens/Auth/login.dart';
+import 'package:you_can_cook/utils/color.dart'; // Import màn hình Login
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -47,9 +50,9 @@ class _SplashScreenState extends State<SplashScreen> {
                 width: 8.0,
                 height: 8.0,
                 decoration: BoxDecoration(
-                  
                   shape: BoxShape.circle,
-                  color: _currentPage == index ? Color(0xFFEEA734) : Colors.grey,
+                  color:
+                      _currentPage == index ? AppColors.primary : Colors.grey,
                 ),
               );
             }),
@@ -65,7 +68,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFEEA734),
+                backgroundColor: AppColors.primary,
                 padding: EdgeInsets.symmetric(horizontal: 80, vertical: 15),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.0),

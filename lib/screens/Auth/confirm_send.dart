@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 class ConfirmSendCodeScreen extends StatelessWidget {
   final String email;
@@ -8,10 +9,10 @@ class ConfirmSendCodeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () {

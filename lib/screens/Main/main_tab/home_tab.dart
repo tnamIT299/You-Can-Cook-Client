@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:you_can_cook/widgets/card_post.dart';
 import 'package:you_can_cook/screens/Main/sub_screens/settting.dart';
 import 'package:you_can_cook/screens/Main/sub_screens/post/create_post.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 class HomeTab extends StatelessWidget {
   HomeTab({super.key});
@@ -43,7 +44,7 @@ class HomeTab extends StatelessWidget {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: BoxDecoration(color: const Color(0xFFEEA734)),
+              decoration: BoxDecoration(color: AppColors.primary),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -94,7 +95,7 @@ class HomeTab extends StatelessWidget {
             pinned: false,
             floating: false,
             expandedHeight: 200.0,
-            backgroundColor: const Color(0xFFEEA734),
+            backgroundColor: AppColors.primary,
             flexibleSpace: FlexibleSpaceBar(
               background: Padding(
                 padding: const EdgeInsets.all(16.0),
