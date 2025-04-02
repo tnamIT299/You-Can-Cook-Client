@@ -47,6 +47,8 @@ dependencies:
   flutter_redux: ^0.10.0
   redux: ^5.0.0
   permission_handler: ^11.4.0
+  carousel_slider: ^5.0.0
+  timeago: ^3.7.0
 
 dev_dependencies:
   flutter_test:

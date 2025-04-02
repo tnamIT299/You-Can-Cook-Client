@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:you_can_cook/services/AuthService.dart';
 import 'package:you_can_cook/screens/Auth/login.dart';
 import 'package:you_can_cook/utils/color.dart';
+import 'package:you_can_cook/screens/drawerScreens/loyalPoint.dart';
 
 class SettingsScreen extends StatelessWidget {
   SettingsScreen({super.key});
@@ -9,8 +10,8 @@ class SettingsScreen extends StatelessWidget {
   // Dữ liệu giả cho các mục cài đặt
   final List<Map<String, dynamic>> settingsItems = [
     {
-      "title": "Chỉnh sửa trang cá nhân",
-      "icon": Icons.edit,
+      "title": "Điểm đóng góp",
+      "icon": Icons.workspace_premium,
       "trailing": Icons.chevron_right,
     },
     {
@@ -150,6 +151,14 @@ class SettingsScreen extends StatelessWidget {
                           )
                           : Icon(item["trailing"], color: Colors.grey),
                   onTap: () {
+                    if (item["title"] == "Điểm đóng góp") {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => LoyaltyPointsScreen(),
+                        ),
+                      );
+                    }
                     if (item["title"] == "Chủ đề") {
                       _showSubMenu(context, item["title"], item["subItems"]);
                     }

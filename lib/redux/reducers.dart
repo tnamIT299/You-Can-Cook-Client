@@ -37,6 +37,8 @@ class AppState {
 AppState appReducer(AppState state, dynamic action) {
   if (action is SetUserInfo) {
     return state.copyWith(userInfo: action.userInfo, isLoading: false);
+  } else if (action is ClearUserInfo) {
+    return state.copyWith(userInfo: null, userPosts: [], userPhotos: []);
   } else if (action is SetLoading) {
     return state.copyWith(isLoading: action.isLoading);
   } else if (action is SetError) {

@@ -1,22 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
-import 'package:you_can_cook/db/db.dart';
-import 'package:you_can_cook/screens/Main/sub_screens/settting.dart';
-import 'package:you_can_cook/widgets/card_photo_profile.dart';
-import 'package:you_can_cook/widgets/card_post_profile.dart';
-import 'package:you_can_cook/widgets/card_badges_profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:you_can_cook/redux/actions.dart';
 import 'package:you_can_cook/redux/reducers.dart';
+import 'package:you_can_cook/screens/Main/sub_screens/settting.dart';
 import 'package:you_can_cook/screens/Main/sub_screens/profile/edit_profile.dart';
+import 'package:you_can_cook/widgets/card_photo_profile.dart';
+import 'package:you_can_cook/widgets/card_post_profile.dart';
+import 'package:you_can_cook/widgets/card_badges_profile.dart';
 import 'package:you_can_cook/widgets/loading_screen.dart';
-import 'package:supabase/supabase.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:you_can_cook/utils/color.dart';
 
 class ProfileTab extends StatefulWidget {
-  ProfileTab({super.key});
-  final email = FirebaseAuth.instance.currentUser!.email;
+  const ProfileTab({super.key});
 
   @override
   _ProfileTabState createState() => _ProfileTabState();
@@ -31,27 +27,38 @@ class _ProfileTabState extends State<ProfileTab>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
 
-    // Dispatch actions ngay lập tức trong initState
-    final store = StoreProvider.of<AppState>(context, listen: false);
-    if (widget.email != null && store.state.userInfo == null) {
-      store.dispatch(FetchUserInfo(widget.email!));
-    }
+    // Tải dữ liệu ngay khi màn hình được khởi tạo
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final store = StoreProvider.of<AppState>(context, listen: false);
+      final currentUser = FirebaseAuth.instance.currentUser;
 
-    // Kiểm tra và dispatch FetchUserPostsAndPhotos nếu cần
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final uid = store.state.userInfo?.uid;
-      if (uid != null &&
-          (store.state.userPosts.isEmpty || store.state.userPhotos.isEmpty)) {
-        store.dispatch(FetchUserPostsAndPhotos(uid));
+      if (currentUser != null) {
+        // Fetch thông tin người dùng trước
+        await store.dispatch(FetchUserInfo(currentUser.email!));
+
+        // Lấy lại userInfo từ Redux store sau khi đã fetch
+        final userInfo = store.state.userInfo;
+
+        if (userInfo != null && userInfo.uid != null) {
+          // Chỉ fetch bài đăng nếu uid không bị null
+          store.dispatch(FetchUserPostsAndPhotos(userInfo.uid!));
+        } else {
+          debugPrint("UID is null, cannot fetch posts.");
+        }
+      } else {
+        debugPrint("Current user is null.");
       }
     });
   }
 
   Future<void> _refreshData() async {
     final store = StoreProvider.of<AppState>(context, listen: false);
-    final uid = store.state.userInfo?.uid;
-    if (uid != null) {
-      store.dispatch(FetchUserPostsAndPhotos(uid));
+    final userInfo = store.state.userInfo;
+
+    if (userInfo != null && userInfo.uid != null) {
+      store.dispatch(FetchUserPostsAndPhotos(userInfo.uid!));
+    } else {
+      debugPrint("UID is null, cannot refresh data.");
     }
   }
 
@@ -96,18 +103,6 @@ class _ProfileTabState extends State<ProfileTab>
           // Hiển thị UI chính khi có userInfo
           else if (state.userInfo != null) {
             final userInfo = state.userInfo!;
-
-            // Cập nhật dữ liệu khi uid thay đổi
-            if (state.userPosts.isEmpty && userInfo.uid != null) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                final store = StoreProvider.of<AppState>(
-                  context,
-                  listen: false,
-                );
-                store.dispatch(FetchUserPostsAndPhotos(userInfo.uid));
-              });
-            }
-
             return RefreshIndicator(
               onRefresh: _refreshData,
               child: CustomScrollView(

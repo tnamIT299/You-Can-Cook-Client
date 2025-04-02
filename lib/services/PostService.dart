@@ -8,7 +8,12 @@ class PostService {
   PostService(this._client);
 
   Future<List<Post>> fetchPosts() async {
-    final response = await _client.from('posts').select();
+    final response = await _client
+        .from('posts')
+        .select(
+          '*, users!posts_uid_fkey(nickname, avatar, uid)',
+        ) // Join với bảng users
+        .order('createAt', ascending: false); // Sắp xếp theo thời gian mới nhất
     return (response as List<dynamic>)
         .map((post) => Post.fromMap(post))
         .toList();

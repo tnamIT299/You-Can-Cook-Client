@@ -19,6 +19,10 @@ class SetUserInfo {
   SetUserInfo(this.userInfo);
 }
 
+class ClearUserInfo {
+  ClearUserInfo();
+}
+
 class SetLoading {
   final bool isLoading;
 

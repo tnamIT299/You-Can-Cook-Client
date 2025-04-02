@@ -110,6 +110,7 @@ class AuthService {
       await _supabase.from('users').insert({
         'email': userCredential.user?.email,
         'name': fullName.trim(),
+        'createAt': DateTime.now(),
       });
 
       return null;

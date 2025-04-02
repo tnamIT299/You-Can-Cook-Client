@@ -12,6 +12,8 @@ class Post {
   final int? psave;
   final String? prange;
   final DateTime? createAt;
+  final String? nickname; // Từ bảng users
+  final String? avatar; // Từ bảng users
 
   Post({
     this.pid,
@@ -24,6 +26,8 @@ class Post {
     this.psave,
     this.prange,
     this.createAt,
+    this.nickname,
+    this.avatar,
   });
 
   Post copyWith({
@@ -37,6 +41,8 @@ class Post {
     int? psave,
     String? prange,
     DateTime? createAt,
+    String? nickname,
+    String? avatar,
   }) {
     return Post(
       pid: pid ?? this.pid,
@@ -49,6 +55,8 @@ class Post {
       psave: psave ?? this.psave,
       prange: prange ?? this.prange,
       createAt: createAt ?? this.createAt,
+      nickname: nickname ?? this.nickname,
+      avatar: avatar ?? this.avatar,
     );
   }
 
@@ -95,6 +103,9 @@ class Post {
           map['createAt'] != null
               ? DateTime.parse(map['createAt'] as String)
               : null,
+      nickname:
+          map['users'] != null ? map['users']['nickname'] as String : null,
+      avatar: map['users'] != null ? map['users']['avatar'] as String? : null,
     );
   }
 
@@ -112,7 +123,7 @@ class Post {
 
   @override
   String toString() {
-    return 'Post(pid: $pid, uid: $uid, pcontent: $pcontent, pimage: $pimage, phashtag: $phashtag, plike: $plike, pcomment: $pcomment, psave: $psave, prange: $prange, createAt: $createAt)';
+    return 'Post(pid: $pid, uid: $uid, pcontent: $pcontent, pimage: $pimage, phashtag: $phashtag, plike: $plike, pcomment: $pcomment, psave: $psave, prange: $prange, createAt: $createAt, nickname: $nickname, avatar: $avatar)';
   }
 
   @override
@@ -128,7 +139,9 @@ class Post {
         other.pcomment == pcomment &&
         other.psave == psave &&
         other.prange == prange &&
-        other.createAt == createAt;
+        other.createAt == createAt &&
+        other.nickname == nickname &&
+        other.avatar == avatar;
   }
 
   @override
@@ -142,6 +155,8 @@ class Post {
         pcomment.hashCode ^
         psave.hashCode ^
         prange.hashCode ^
-        createAt.hashCode;
+        createAt.hashCode ^
+        nickname.hashCode ^
+        avatar.hashCode;
   }
 }

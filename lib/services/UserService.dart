@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:you_can_cook/models/User.dart' as userModel;
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 class UserService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -61,10 +62,26 @@ class UserService {
   }
 
   // Lấy danh sách tất cả người dùng
-  Future<List<User>> getAllUsers() async {
+  Future<List<userModel.User>> getAllUsers() async {
     final response = await _supabase.from('users').select();
-    return List<User>.from(
+    return List<userModel.User>.from(
       response.map((user) => userModel.User.fromMap(user)),
     );
+  }
+
+  Future<String?> getCurrentUserUid() async {
+    final firebase_auth.User? currentUser =
+        firebase_auth.FirebaseAuth.instance.currentUser;
+    if (currentUser == null || currentUser.email == null) return null;
+
+    final response =
+        await _supabase
+            .from('users')
+            .select('uid')
+            .eq('email', currentUser.email!) // Lấy uid dựa trên email
+            .single();
+
+    return response['uid']
+        .toString(); // Chuyển về String để đồng bộ với logic so sánh
   }
 }
