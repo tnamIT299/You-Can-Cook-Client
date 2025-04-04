@@ -5,6 +5,7 @@ import 'package:you_can_cook/screens/Main/main_tab/chatAI_tab.dart';
 import 'package:you_can_cook/screens/Main/main_tab/ranked_tab.dart';
 import 'package:you_can_cook/screens/Main/main_tab/profile_tab.dart';
 import 'package:you_can_cook/utils/color.dart';
+import 'package:you_can_cook/services/UserService.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,21 +15,32 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0; // Index của tab được chọn
-
-  // Danh sách các màn hình tương ứng với các tab
-  late final List<Widget> _screens;
+  int _selectedIndex = 0;
+  late List<Widget> _screens = [
+    const Center(child: CircularProgressIndicator()),
+  ];
 
   @override
   void initState() {
     super.initState();
-    _screens = [
-      HomeTab(),
-      const ExploreTab(),
-      const ChatAI_Tab(),
-      const Ranked_Tab(),
-      ProfileTab(),
-    ];
+    _initializeScreens();
+  }
+
+  Future<void> _initializeScreens() async {
+    final currentUserUid =
+        await UserService().getCurrentUserUid(); // Lấy UID từ UserService
+    final int userId =
+        currentUserUid ?? 0; // Nếu null, đặt giá trị mặc định là 0
+
+    setState(() {
+      _screens = [
+        HomeTab(),
+        const ExploreTab(),
+        const ChatAI_Tab(),
+        const Ranked_Tab(),
+        ProfileTab(userId: userId), // Truyền userId vào ProfileTab
+      ];
+    });
   }
 
   // Xử lý khi thay đổi tab

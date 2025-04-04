@@ -1,4 +1,6 @@
 import 'package:you_can_cook/models/Post.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:you_can_cook/db/db.dart';
 
 class FetchUserInfo {
   final String email;
@@ -52,4 +54,10 @@ class FetchUserPostsAndPhotos {
   final int uid;
 
   FetchUserPostsAndPhotos(this.uid);
+}
+
+class FetchUserInfoById {
+  final int userId;
+
+  FetchUserInfoById(this.userId);
 }

@@ -160,7 +160,7 @@ class HomeTab extends StatelessWidget {
               ),
             ),
             SliverToBoxAdapter(
-              child: FutureBuilder<String?>(
+              child: FutureBuilder<int?>(
                 future: _userService.getCurrentUserUid(),
                 builder: (context, userSnapshot) {
                   if (userSnapshot.connectionState == ConnectionState.waiting) {
@@ -170,7 +170,7 @@ class HomeTab extends StatelessWidget {
                     return Center(child: Text('Error: ${userSnapshot.error}'));
                   }
 
-                  final String? currentUserUid = userSnapshot.data;
+                  final int? currentUserUid = userSnapshot.data;
 
                   return FutureBuilder<List<Post>>(
                     future: _postService.fetchPosts(),
@@ -202,7 +202,7 @@ class HomeTab extends StatelessWidget {
                             ),
                             child: CardPost(
                               post: post,
-                              currentUserUid: currentUserUid,
+                              currentUserUid: currentUserUid?.toString(),
                             ),
                           );
                         },

@@ -3,7 +3,8 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:you_can_cook/models/Post.dart';
 import 'package:you_can_cook/utils/color.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import 'package:timeago/src/messages/vi_messages.dart'; // Import hỗ trợ Tiếng Việt
+import 'package:timeago/src/messages/vi_messages.dart';
+import 'package:you_can_cook/screens/Main/main_tab/profile_tab.dart';
 
 void registerTimeagoMessages() {
   timeago.setLocaleMessages('vi', timeago.ViMessages());
@@ -28,6 +29,19 @@ class _CardPostState extends State<CardPost> {
     timeago.setLocaleMessages('vi', timeago.ViMessages());
   }
 
+  // Hàm chuyển hướng đến ProfileTab
+  void _navigateToProfile(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => ProfileTab(
+              userId: widget.post.uid,
+            ), // Truyền UID của người đăng
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isPostOwner =
@@ -46,14 +60,26 @@ class _CardPostState extends State<CardPost> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            leading: CircleAvatar(
-              backgroundImage:
-                  widget.post.avatar != null
-                      ? NetworkImage(widget.post.avatar!)
-                      : const AssetImage("assets/icons/logo.png")
-                          as ImageProvider,
+            leading: GestureDetector(
+              onTap:
+                  () => _navigateToProfile(
+                    context,
+                  ), // Chuyển hướng khi nhấn avatar
+              child: CircleAvatar(
+                backgroundImage:
+                    widget.post.avatar != null
+                        ? NetworkImage(widget.post.avatar!)
+                        : const AssetImage("assets/icons/logo.png")
+                            as ImageProvider,
+              ),
             ),
-            title: Text(widget.post.nickname ?? 'Unknown User'),
+            title: GestureDetector(
+              onTap:
+                  () => _navigateToProfile(
+                    context,
+                  ), // Chuyển hướng khi nhấn nickname
+              child: Text(widget.post.nickname ?? 'Unknown User'),
+            ),
             trailing:
                 isPostOwner
                     ? IconButton(

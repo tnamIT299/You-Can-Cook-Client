@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:you_can_cook/redux/actions.dart';
 import 'package:you_can_cook/redux/reducers.dart';
 import 'package:you_can_cook/screens/Main/sub_screens/settting.dart';
@@ -10,9 +10,13 @@ import 'package:you_can_cook/widgets/card_post_profile.dart';
 import 'package:you_can_cook/widgets/card_badges_profile.dart';
 import 'package:you_can_cook/widgets/loading_screen.dart';
 import 'package:you_can_cook/utils/color.dart';
+import 'package:you_can_cook/services/FollowerService.dart';
+import 'package:you_can_cook/services/UserService.dart';
+import 'package:you_can_cook/utils/color.dart';
 
 class ProfileTab extends StatefulWidget {
-  const ProfileTab({super.key});
+  final int userId;
+  const ProfileTab({super.key, required this.userId});
 
   @override
   _ProfileTabState createState() => _ProfileTabState();
@@ -21,34 +25,50 @@ class ProfileTab extends StatefulWidget {
 class _ProfileTabState extends State<ProfileTab>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int? currentUserUid; // Lưu UID của người dùng hiện tại
 
   @override
   void initState() {
     super.initState();
+    print("UserId passed to ProfileTab: ${widget.userId}");
     _tabController = TabController(length: 3, vsync: this);
+
+    // Lấy UID của người dùng hiện tại
+    _fetchCurrentUserUid();
 
     // Tải dữ liệu ngay khi màn hình được khởi tạo
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final store = StoreProvider.of<AppState>(context, listen: false);
-      final currentUser = FirebaseAuth.instance.currentUser;
 
-      if (currentUser != null) {
-        // Fetch thông tin người dùng trước
-        await store.dispatch(FetchUserInfo(currentUser.email!));
+      // Fetch thông tin user dựa trên widget.userId
+      await store.dispatch(FetchUserInfoById(widget.userId));
 
-        // Lấy lại userInfo từ Redux store sau khi đã fetch
-        final userInfo = store.state.userInfo;
+      // Lấy userInfo từ Redux store sau khi fetch
+      final userInfo = store.state.userInfo;
 
-        if (userInfo != null && userInfo.uid != null) {
-          // Chỉ fetch bài đăng nếu uid không bị null
-          store.dispatch(FetchUserPostsAndPhotos(userInfo.uid!));
-        } else {
-          debugPrint("UID is null, cannot fetch posts.");
-        }
+      if (userInfo != null && userInfo.uid != null) {
+        // Fetch bài đăng và ảnh của user
+        store.dispatch(FetchUserPostsAndPhotos(userInfo.uid!));
       } else {
-        debugPrint("Current user is null.");
+        debugPrint(
+          "User info is null or UID is missing for userId: ${widget.userId}",
+        );
       }
     });
+  }
+
+  // Lấy UID của người dùng hiện tại
+  Future<void> _fetchCurrentUserUid() async {
+    final userService = UserService();
+    final uid = await userService.getCurrentUserUid();
+    if (uid != null) {
+      setState(() {
+        currentUserUid = uid;
+        print(uid);
+      });
+    } else {
+      debugPrint("Current user UID is null.");
+    }
   }
 
   Future<void> _refreshData() async {
@@ -57,6 +77,7 @@ class _ProfileTabState extends State<ProfileTab>
 
     if (userInfo != null && userInfo.uid != null) {
       store.dispatch(FetchUserPostsAndPhotos(userInfo.uid!));
+      store.dispatch(FetchUserInfoById(userInfo.uid!));
     } else {
       debugPrint("UID is null, cannot refresh data.");
     }
@@ -70,6 +91,8 @@ class _ProfileTabState extends State<ProfileTab>
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = firebase_auth.FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -92,17 +115,15 @@ class _ProfileTabState extends State<ProfileTab>
       body: StoreConnector<AppState, AppState>(
         converter: (store) => store.state,
         builder: (context, state) {
-          // Hiển thị màn hình loading nếu đang tải dữ liệu
           if (state.isLoading) {
             return const LoadingScreen();
-          }
-          // Hiển thị lỗi nếu có
-          else if (state.errorMessage != null) {
+          } else if (state.errorMessage != null) {
             return Center(child: Text(state.errorMessage!));
-          }
-          // Hiển thị UI chính khi có userInfo
-          else if (state.userInfo != null) {
+          } else if (state.userInfo != null) {
             final userInfo = state.userInfo!;
+            final isOwnProfile =
+                currentUserUid != null && currentUserUid == widget.userId;
+
             return RefreshIndicator(
               onRefresh: _refreshData,
               child: CustomScrollView(
@@ -116,14 +137,86 @@ class _ProfileTabState extends State<ProfileTab>
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundColor: Colors.white,
-                            backgroundImage:
-                                userInfo.avatar != null
-                                    ? NetworkImage(userInfo.avatar!)
-                                    : const AssetImage("assets/icons/logo.png")
-                                        as ImageProvider,
+                          Column(
+                            children: [
+                              CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Colors.white,
+                                backgroundImage:
+                                    userInfo.avatar != null
+                                        ? NetworkImage(userInfo.avatar!)
+                                        : const AssetImage(
+                                              "assets/icons/logo.png",
+                                            )
+                                            as ImageProvider,
+                              ),
+                              const SizedBox(height: 8),
+                              if (!isOwnProfile &&
+                                  currentUser != null &&
+                                  currentUserUid != null)
+                                FutureBuilder<bool>(
+                                  future: FollowerService()
+                                      .checkFollowingStatus(
+                                        currentUserUid!,
+                                        widget.userId,
+                                      ),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      );
+                                    }
+                                    if (snapshot.hasError) {
+                                      return const Text(
+                                        'Error loading follow status',
+                                      );
+                                    }
+                                    final isFollowing = snapshot.data ?? false;
+                                    return ElevatedButton(
+                                      onPressed: () async {
+                                        try {
+                                          await FollowerService().toggleFollow(
+                                            currentUserUid!,
+                                            widget.userId,
+                                            isFollowing,
+                                          );
+                                          setState(() {}); // Cập nhật UI
+                                        } catch (e) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(e.toString()),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.primary,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 8,
+                                        ),
+                                        minimumSize: const Size(100, 36),
+                                      ),
+                                      child: Text(
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        isFollowing
+                                            ? "Hủy theo dõi"
+                                            : "Theo dõi",
+                                      ),
+                                    );
+                                  },
+                                ),
+                            ],
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -144,23 +237,25 @@ class _ProfileTabState extends State<ProfileTab>
                                         maxLines: 1,
                                       ),
                                     ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.edit,
-                                        color: Colors.grey,
+                                    if (isOwnProfile)
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.edit,
+                                          color: Colors.grey,
+                                        ),
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                      EditProfileScreen(
+                                                        userInfo: userInfo,
+                                                      ),
+                                            ),
+                                          );
+                                        },
                                       ),
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (context) => EditProfileScreen(
-                                                  userInfo: userInfo,
-                                                ),
-                                          ),
-                                        );
-                                      },
-                                    ),
                                   ],
                                 ),
                                 if (userInfo.nickname != null) ...[
@@ -232,7 +327,6 @@ class _ProfileTabState extends State<ProfileTab>
                     child: TabBarView(
                       controller: _tabController,
                       children: [
-                        // Posts Tab
                         state.userPosts.isEmpty
                             ? const Center(child: Text("Chưa có bài đăng nào"))
                             : GridView.builder(
@@ -251,11 +345,9 @@ class _ProfileTabState extends State<ProfileTab>
                                 );
                               },
                             ),
-                        // Photos Tab
                         state.userPhotos.isEmpty
                             ? const Center(child: Text("Chưa có ảnh nào"))
                             : CardPhotoProfile(photos: state.userPhotos),
-                        // Badges Tab
                         userInfo.badges == null || userInfo.badges!.isEmpty
                             ? const Center(child: Text("Chưa có huy hiệu nào"))
                             : CardBadgesTab(
@@ -276,7 +368,6 @@ class _ProfileTabState extends State<ProfileTab>
               ),
             );
           }
-          // Trường hợp mặc định khi chưa có dữ liệu
           return const Center(child: Text("Đang tải thông tin..."));
         },
       ),

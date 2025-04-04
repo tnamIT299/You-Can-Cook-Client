@@ -30,13 +30,21 @@ void appMiddleware(
   } else if (action is FetchUserPostsAndPhotos) {
     store.dispatch(SetLoading(true));
     try {
-      final postService = PostService(
-        supabaseClient,
-      ); // Đảm bảo supabaseClient được khởi tạo
+      final postService = PostService(supabaseClient);
       final posts = await postService.fetchPostsByUid(action.uid);
       final photos = await postService.fetchImagesByUid(action.uid);
       store.dispatch(SetUserPosts(posts));
       store.dispatch(SetUserPhotos(photos));
+    } catch (e) {
+      store.dispatch(SetError(e.toString()));
+    }
+  } else if (action is FetchUserInfoById) {
+    // Thêm xử lý cho FetchUserInfoById
+    store.dispatch(SetLoading(true));
+    try {
+      final userService = UserService();
+      final userInfo = await userService.getUserInfoById(action.userId);
+      store.dispatch(SetUserInfo(userInfo));
     } catch (e) {
       store.dispatch(SetError(e.toString()));
     }

@@ -1,6 +1,7 @@
 import 'package:you_can_cook/models/Post.dart';
 import 'package:supabase/supabase.dart';
 import 'dart:io';
+import 'package:mime/mime.dart';
 
 class PostService {
   final SupabaseClient _client;

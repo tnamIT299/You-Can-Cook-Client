@@ -13,6 +13,13 @@ class UserService {
     return userModel.User.fromMap(response);
   }
 
+  // Lấy thông tin người dùng từ Supabase dựa trên userId (uid)
+  Future<userModel.User?> getUserInfoById(int userId) async {
+    final response =
+        await _supabase.from('users').select().eq('uid', userId).single();
+    return userModel.User.fromMap(response);
+  }
+
   // Cập nhật thông tin người dùng
   Future<void> updateUserInfo(
     String email,
@@ -23,8 +30,9 @@ class UserService {
         .update(updates)
         .eq('email', email);
 
-    if (response != null) {
-      throw Exception('Failed to update user info: $response');
+    if (response.error != null) {
+      // Sửa lỗi kiểm tra
+      throw Exception('Failed to update user info: ${response.error!.message}');
     }
   }
 
@@ -34,7 +42,7 @@ class UserService {
         .update({'totalPoint': points})
         .eq('uid', uid);
     if (response != null) {
-      throw Exception('Failed to update points: ${response.error!.message}');
+      throw Exception('Failed to update points: $response');
     }
   }
 
@@ -69,7 +77,7 @@ class UserService {
     );
   }
 
-  Future<String?> getCurrentUserUid() async {
+  Future<int?> getCurrentUserUid() async {
     final firebase_auth.User? currentUser =
         firebase_auth.FirebaseAuth.instance.currentUser;
     if (currentUser == null || currentUser.email == null) return null;
@@ -78,10 +86,84 @@ class UserService {
         await _supabase
             .from('users')
             .select('uid')
-            .eq('email', currentUser.email!) // Lấy uid dựa trên email
+            .eq('email', currentUser.email!)
             .single();
 
-    return response['uid']
-        .toString(); // Chuyển về String để đồng bộ với logic so sánh
+    return response['uid'] as int?;
+  }
+
+  Future<userModel.User?> getUserByEmail(String email) async {
+    final response =
+        await _supabase.from('users').select().eq('email', email).maybeSingle();
+    print(response);
+    return response != null ? userModel.User.fromMap(response) : null;
+  }
+
+  // Tăng số lượng follower của user
+  Future<void> incrementFollower(int userId) async {
+    final response =
+        await _supabase
+            .from('users')
+            .select('follower')
+            .eq('uid', userId)
+            .single();
+
+    final currentFollower = response['follower'] as int? ?? 0;
+    await _supabase
+        .from('users')
+        .update({'follower': currentFollower + 1})
+        .eq('uid', userId);
+  }
+
+  // Giảm số lượng follower của user
+  Future<void> decrementFollower(int userId) async {
+    final response =
+        await _supabase
+            .from('users')
+            .select('follower')
+            .eq('uid', userId)
+            .single();
+
+    final currentFollower = response['follower'] as int? ?? 0;
+    if (currentFollower > 0) {
+      await _supabase
+          .from('users')
+          .update({'follower': currentFollower - 1})
+          .eq('uid', userId);
+    }
+  }
+
+  // Tăng số lượng following của user
+  Future<void> incrementFollowing(int userId) async {
+    final response =
+        await _supabase
+            .from('users')
+            .select('following')
+            .eq('uid', userId)
+            .single();
+
+    final currentFollowing = response['following'] as int? ?? 0;
+    await _supabase
+        .from('users')
+        .update({'following': currentFollowing + 1})
+        .eq('uid', userId);
+  }
+
+  // Giảm số lượng following của user
+  Future<void> decrementFollowing(int userId) async {
+    final response =
+        await _supabase
+            .from('users')
+            .select('following')
+            .eq('uid', userId)
+            .single();
+
+    final currentFollowing = response['following'] as int? ?? 0;
+    if (currentFollowing > 0) {
+      await _supabase
+          .from('users')
+          .update({'following': currentFollowing - 1})
+          .eq('uid', userId);
+    }
   }
 }
