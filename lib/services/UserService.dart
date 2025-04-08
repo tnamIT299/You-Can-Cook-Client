@@ -166,4 +166,15 @@ class UserService {
           .eq('uid', userId);
     }
   }
+
+  Future<List<userModel.User>> get5UserMaxFolllwer() async {
+    final response = await _supabase
+        .from('users')
+        .select()
+        .order('follower', ascending: false)
+        .limit(5);
+    return List<userModel.User>.from(
+      response.map((user) => userModel.User.fromMap(user)),
+    );
+  }
 }

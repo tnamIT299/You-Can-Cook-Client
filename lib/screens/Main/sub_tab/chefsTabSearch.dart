@@ -1,28 +1,116 @@
 import 'package:flutter/material.dart';
-class ChefsTabSearch extends StatelessWidget {
-  const ChefsTabSearch({
-    super.key,
-    required this.chefs,
-  });
+import 'package:you_can_cook/models/User.dart' as userModel;
+import 'package:you_can_cook/services/UserService.dart';
+import 'package:you_can_cook/utils/color.dart';
+import 'package:you_can_cook/screens/Main/main_tab/profile_tab.dart';
 
-  final List<Map<String, dynamic>> chefs;
+class ChefsTabSearch extends StatefulWidget {
+  final String searchQuery;
+
+  const ChefsTabSearch({super.key, required this.searchQuery});
+
+  @override
+  _ChefsTabSearchState createState() => _ChefsTabSearchState();
+}
+
+class _ChefsTabSearchState extends State<ChefsTabSearch> {
+  final UserService _userService = UserService();
+  List<userModel.User> topChefs = [];
+  List<userModel.User> filteredChefs = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTopChefs();
+  }
+
+  @override
+  void didUpdateWidget(covariant ChefsTabSearch oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.searchQuery != widget.searchQuery) {
+      _filterChefs();
+    }
+  }
+
+  Future<void> _fetchTopChefs() async {
+    try {
+      final chefs = await _userService.get5UserMaxFolllwer();
+      setState(() {
+        topChefs = chefs;
+        filteredChefs = chefs;
+        isLoading = false;
+      });
+      _filterChefs();
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Lỗi: $e")));
+    }
+  }
+
+  void _filterChefs() {
+    if (widget.searchQuery.isEmpty) {
+      setState(() {
+        filteredChefs = topChefs;
+      });
+      return;
+    }
+
+    final query = widget.searchQuery.toLowerCase();
+    setState(() {
+      filteredChefs =
+          topChefs.where((chef) {
+            final name = (chef.name).toLowerCase();
+            final nickname = (chef.nickname ?? '').toLowerCase();
+            return name.contains(query) || nickname.contains(query);
+          }).toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (filteredChefs.isEmpty) {
+      return const Center(child: Text("Không có đầu bếp nào."));
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.all(8.0),
-      itemCount: chefs.length,
+      itemCount: filteredChefs.length,
       itemBuilder: (context, index) {
-        final chef = chefs[index];
+        final chef = filteredChefs[index];
         return ListTile(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProfileTab(userId: chef.uid),
+              ),
+            );
+          },
           leading: CircleAvatar(
-            backgroundImage: AssetImage(chef["image"]!),
+            backgroundImage:
+                chef.avatar != null
+                    ? NetworkImage(chef.avatar!)
+                    : const AssetImage("assets/icons/logo.png")
+                        as ImageProvider,
           ),
-          title: Text(chef["name"]!),
+          title: Text(chef.nickname ?? chef.name),
           subtitle: Row(
             children: [
-              const Icon(Icons.star, color: Colors.yellow, size: 16),
-              Text("${chef["rating"]}", style: const TextStyle(fontSize: 14)),
+              const Icon(Icons.groups, color: AppColors.primary, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                "${chef.follower ?? 0} người theo dõi",
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+              ),
             ],
           ),
         );

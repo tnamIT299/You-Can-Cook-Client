@@ -6,6 +6,7 @@ void show_Dialog(
   String title,
   String content,
   VoidCallback onOkPressed,
+  VoidCallback onCancelPressed,
 ) {
   showDialog(
     context: context,
@@ -16,6 +17,13 @@ void show_Dialog(
         title: Text(title),
         content: Text(content),
         actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Đóng dialog
+              onCancelPressed(); // Thực hiện hành động khi nhấn nút "OK"
+            },
+            child: Text('Huỷ', style: TextStyle(color: Colors.red)),
+          ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop(); // Đóng dialog

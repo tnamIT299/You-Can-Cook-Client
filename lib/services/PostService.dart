@@ -20,6 +20,39 @@ class PostService {
         .toList();
   }
 
+  Future<List<Post>> fetchFilteredPosts(int currentUserUid) async {
+    try {
+      // Bước 1: Lấy danh sách người mà người dùng hiện tại đang theo dõi
+      final followingResponse = await _client
+          .from('followers')
+          .select('following_id')
+          .eq('follower_id', currentUserUid);
+
+      List<int> followingIds =
+          (followingResponse as List<dynamic>)
+              .map((item) => item['following_id'] as int)
+              .toList();
+
+      // Bước 2: Truy vấn bài post theo các tiêu chí
+      final response = await _client
+          .from('posts')
+          .select('*, users!posts_uid_fkey(nickname, avatar, uid)')
+          .or(
+            'prange.eq.Công khai,uid.eq.$currentUserUid${followingIds.isNotEmpty ? ',uid.in.(${followingIds.join(',')})' : ''}',
+          ) // Lọc bài post: Công khai, của chính người dùng, hoặc của người đang theo dõi
+          .order(
+            'createAt',
+            ascending: false,
+          ); // Sắp xếp theo thời gian mới nhất
+
+      return (response as List<dynamic>)
+          .map((post) => Post.fromMap(post))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch filtered posts: $e');
+    }
+  }
+
   Future<List<Post>> fetchPostsByUid(int uid) async {
     final response = await _client.from('posts').select().eq('uid', uid);
     return (response as List<dynamic>)
@@ -73,6 +106,74 @@ class PostService {
       return imageUrls;
     } catch (e) {
       throw Exception('Failed to fetch images: $e');
+    }
+  }
+
+  Future<List<Post>> get5PostMaxLike() async {
+    final response = await _client
+        .from('posts')
+        .select('*, users!posts_uid_fkey(nickname, avatar, uid)')
+        .order('plike', ascending: false)
+        .limit(5);
+    return (response as List<dynamic>)
+        .map((post) => Post.fromMap(post))
+        .toList();
+  }
+
+  Future<List<String>> get10Hashtag() async {
+    try {
+      // Lấy 5 bài post có lượt like cao nhất
+      final response = await _client
+          .from('posts')
+          .select('phashtag') // Lấy cột phashtag (dạng chuỗi)
+          .order('plike', ascending: false)
+          .limit(10);
+
+      // Tạo danh sách các hashtag duy nhất
+      Set<String> uniqueHashtags = {};
+      for (var post in response as List<dynamic>) {
+        if (post['phashtag'] != null) {
+          // Xử lý phashtag như chuỗi và loại bỏ ký tự dư thừa
+          String hashtagString = post['phashtag'].toString();
+          // Loại bỏ [ ] và " bằng cách thay thế
+          hashtagString = hashtagString
+              .replaceAll('[', '')
+              .replaceAll(']', '')
+              .replaceAll('"', '');
+          // Tách chuỗi bằng dấu phẩy
+          List<String> hashtags =
+              hashtagString
+                  .split(',')
+                  .map((tag) => tag.trim())
+                  .where((tag) => tag.isNotEmpty)
+                  .toList();
+          uniqueHashtags.addAll(hashtags);
+        }
+      }
+
+      // Lấy tối đa 5 hashtag duy nhất
+      return uniqueHashtags.take(10).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch hashtags: $e');
+    }
+  }
+
+  Future<List<Post>> fetchPostsByHashtag(String hashtag) async {
+    try {
+      final response = await _client
+          .from('posts')
+          .select('*, users!posts_uid_fkey(nickname, avatar, uid)')
+          .ilike('phashtag', '%$hashtag%') // Tìm hashtag trong chuỗi phashtag
+          .order(
+            'createAt',
+            ascending: false,
+          ); // Sắp xếp theo thời gian mới nhất
+
+      return (response as List<dynamic>)
+          .map((post) => Post.fromMap(post))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch posts by hashtag: $e');
     }
   }
 }

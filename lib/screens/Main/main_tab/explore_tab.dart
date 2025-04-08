@@ -3,6 +3,8 @@ import 'package:you_can_cook/screens/Main/sub_tab/chefsTabSearch.dart';
 import 'package:you_can_cook/screens/Main/sub_tab/recipesTabSearch.dart';
 import 'package:you_can_cook/screens/Main/sub_tab/tagTabSearch.dart';
 import 'package:you_can_cook/utils/color.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
 
 class ExploreTab extends StatefulWidget {
   const ExploreTab({super.key});
@@ -14,56 +16,87 @@ class ExploreTab extends StatefulWidget {
 class _ExploreTabState extends State<ExploreTab>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  // Speech to Text
+  final SpeechToText _speechToText = SpeechToText();
+  bool _speechEnabled = false;
+  bool _isListening = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _initSpeech();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
+    _speechToText.stop();
     super.dispose();
   }
 
-  // Dữ liệu giả cho Recipes
-  final List<Map<String, dynamic>> recipes = [
-    {
-      "title": "Chocolate cake with buttercream frosting",
-      "rating": 4.8,
-      "image": "assets/icons/logo.png",
-    },
-    {
-      "title": "Chocolate cake with buttercream frosting",
-      "rating": 4.8,
-      "image": "assets/icons/logo.png",
-    },
-    {
-      "title": "Chocolate cake with buttercream frosting",
-      "rating": 4.8,
-      "image": "assets/icons/logo.png",
-    },
-    {
-      "title": "Chocolate cake with buttercream frosting",
-      "rating": 4.8,
-      "image": "assets/icons/logo.png",
-    },
-    {
-      "title": "Chocolate cake with buttercream frosting",
-      "rating": 4.8,
-      "image": "assets/icons/logo.png",
-    },
-  ];
+  void _initSpeech() async {
+    _speechEnabled = await _speechToText.initialize(
+      onStatus: (status) {
+        if (status == 'done' || status == 'notListening') {
+          setState(() {
+            _isListening = false;
+          });
+        }
+      },
+      onError: (error) {
+        setState(() {
+          _isListening = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Lỗi nhận diện giọng nói: ${error.errorMsg}")),
+        );
+      },
+    );
+    setState(() {});
+  }
 
-  // Dữ liệu giả cho Chefs
-  final List<Map<String, dynamic>> chefs = [
-    {"name": "Chef John", "rating": 4.9, "image": "assets/icons/logo.png"},
-    {"name": "Chef Maria", "rating": 4.7, "image": "assets/icons/logo.png"},
-  ];
+  void _startListening() async {
+    if (!_speechEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Nhận diện giọng nói không khả dụng")),
+      );
+      return;
+    }
 
-  // Dữ liệu giả cho Tags
-  final List<String> tags = ["#baking", "#dessert", "#chocolate", "#cake"];
+    setState(() {
+      _isListening = true;
+    });
+
+    await _speechToText.listen(
+      onResult: _onSpeechResult,
+      localeId: 'vi_VN', // Ngôn ngữ tiếng Việt
+    );
+  }
+
+  void _stopListening() async {
+    await _speechToText.stop();
+    setState(() {
+      _isListening = false;
+    });
+  }
+
+  void _onSpeechResult(SpeechRecognitionResult result) {
+    setState(() {
+      _searchController.text = result.recognizedWords;
+      _searchQuery = result.recognizedWords.trim();
+    });
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      _searchQuery = query.trim();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,13 +111,38 @@ class _ExploreTabState extends State<ExploreTab>
             borderRadius: BorderRadius.circular(20),
           ),
           child: TextField(
+            controller: _searchController,
             decoration: InputDecoration(
               hintText: "Tìm kiếm",
               prefixIcon: const Icon(Icons.search, color: Colors.grey),
-              suffixIcon: const Icon(Icons.mic, color: Colors.black),
+              suffixIcon: SizedBox(
+                width: 100,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.clear, color: Colors.black),
+                      onPressed: () {
+                        _searchController.clear();
+                        _onSearchChanged('');
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        _isListening ? Icons.mic : Icons.mic_none,
+                        color: _isListening ? Colors.red : Colors.black,
+                      ),
+                      onPressed:
+                          _isListening ? _stopListening : _startListening,
+                    ),
+                  ],
+                ),
+              ),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.all(10),
+              contentPadding: const EdgeInsets.all(5),
             ),
+            onChanged: _onSearchChanged,
           ),
         ),
       ),
@@ -97,9 +155,9 @@ class _ExploreTabState extends State<ExploreTab>
             unselectedLabelColor: Colors.grey,
             indicatorColor: Colors.black,
             tabs: const [
-              Tab(text: "Recipes"),
-              Tab(text: "Chefs"),
-              Tab(text: "Tags"),
+              Tab(text: "Món ăn"),
+              Tab(text: "Đầu bếp"),
+              Tab(text: "Hashtag"),
             ],
           ),
           // TabBarView
@@ -108,11 +166,11 @@ class _ExploreTabState extends State<ExploreTab>
               controller: _tabController,
               children: [
                 // Recipes Tab
-                RecipesTabSearch(recipes: recipes),
+                RecipesTabSearch(searchQuery: _searchQuery),
                 // Chefs Tab
-                ChefsTabSearch(chefs: chefs),
+                ChefsTabSearch(searchQuery: _searchQuery),
                 // Tags Tab
-                TagTabSearch(tags: tags),
+                TagTabSearch(),
               ],
             ),
           ),

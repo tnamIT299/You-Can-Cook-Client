@@ -1,16 +1,52 @@
 import 'package:flutter/material.dart';
-import 'package:you_can_cook/screens/Main/main_tab/ranked_tab.dart';
+import 'package:you_can_cook/services/UserService.dart';
 
-class LoyaltyPointsScreen extends StatelessWidget {
-  LoyaltyPointsScreen({super.key});
+class LoyaltyPointsScreen extends StatefulWidget {
+  const LoyaltyPointsScreen({super.key});
 
-  // Dữ liệu giả cho người dùng
-  final Map<String, dynamic> user = {"name": "Sanita Queen", "points": 509};
+  @override
+  _LoyaltyPointsScreenState createState() => _LoyaltyPointsScreenState();
+}
+
+class _LoyaltyPointsScreenState extends State<LoyaltyPointsScreen> {
+  final UserService _userService = UserService(); // Khởi tạo UserService
+  String userName = "";
+  int userPoints = 0;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    try {
+      final userId = 1;
+      final user = await _userService.getUserInfoById(userId);
+      setState(() {
+        userName = user?.nickname ?? user?.name ?? "Không rõ";
+        userPoints = user?.totalPoint ?? 0;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Lỗi: $e")));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF5F5), // Màu nền hồng nhạt giống hình
+      backgroundColor: const Color(0xFFFFF5F5),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -46,7 +82,7 @@ class LoyaltyPointsScreen extends StatelessWidget {
             const SizedBox(height: 16),
             // Tên người dùng
             Text(
-              user["name"],
+              userName,
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -56,33 +92,21 @@ class LoyaltyPointsScreen extends StatelessWidget {
             const SizedBox(height: 8),
             // Số điểm
             Text(
-              "${user["points"]} Points",
+              "$userPoints Điểm",
               style: const TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
             ),
-            const SizedBox(height: 16),
-            // Thông tin chuyển đổi điểm
-            // const Text(
-            //   "Convert Points to Purchase Voucher Code..",
-            //   style: TextStyle(fontSize: 16, color: Colors.grey),
-            // ),
-            const SizedBox(height: 8),
-            // const Text(
-            //   "You need to 1000 points to get 1000 OFF your order to get more points.",
-            //   textAlign: TextAlign.center,
-            //   style: TextStyle(fontSize: 14, color: Colors.grey),
-            // ),
             const SizedBox(height: 24),
             // Nút Convert
             ElevatedButton(
               onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => Ranked_Tab()),
-                );
+                // Navigator.pushReplacement(
+                //   context,
+                //   MaterialPageRoute(builder: (context) => Ranked_Tab()),
+                // );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,

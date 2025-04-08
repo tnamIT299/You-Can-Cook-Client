@@ -58,4 +58,19 @@ class FollowerService {
       throw Exception('Failed to toggle follow status: $e');
     }
   }
+
+  //Huỷ theo dõi
+  Future<void> unfollow(int followerId, int followingId) async {
+    try {
+      await _client
+          .from('followers')
+          .delete()
+          .eq('follower_id', followerId)
+          .eq('following_id', followingId);
+      await _userService.decrementFollower(followingId);
+      await _userService.decrementFollowing(followerId);
+    } catch (e) {
+      throw Exception('Failed to unfollow: $e');
+    }
+  }
 }

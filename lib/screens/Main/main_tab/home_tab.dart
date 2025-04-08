@@ -9,18 +9,84 @@ import 'package:you_can_cook/utils/color.dart';
 import 'package:you_can_cook/screens/drawerScreens/loyalPoint.dart';
 import 'package:you_can_cook/db/db.dart' as db;
 import 'package:you_can_cook/models/Post.dart';
+import 'package:you_can_cook/models/User.dart' as userModel;
+import 'package:you_can_cook/widgets/loading_screen.dart';
 
-class HomeTab extends StatelessWidget {
-  HomeTab({super.key});
+class HomeTab extends StatefulWidget {
+  const HomeTab({super.key});
+  @override
+  _HomeTabState createState() => _HomeTabState();
+}
 
+class _HomeTabState extends State<HomeTab> {
   final PostService _postService = PostService(db.supabaseClient);
   final UserService _userService = UserService();
+
+  List<Post> _posts = [];
+  userModel.User? _currentUser;
+  bool _isLoading = true;
+  int? _currentUserUid;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserInfo();
+  }
+
+  Future<void> _fetchPosts() async {
+    if (_currentUserUid == null)
+      return; // Đảm bảo có UID trước khi lấy bài post
+
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final posts = await _postService.fetchFilteredPosts(_currentUserUid!);
+      setState(() {
+        _posts = posts;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Lỗi khi tải bài viết: $e")));
+    }
+  }
+
+  Future<void> _fetchUserInfo() async {
+    try {
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+      if (firebaseUser != null) {
+        final user = await _userService.getUserInfo(firebaseUser.email!);
+        final uid = await _userService.getCurrentUserUid();
+        setState(() {
+          _currentUser = user;
+          _currentUserUid = uid;
+          _isLoading = false;
+        });
+        // Sau khi lấy được UID, gọi fetchPosts
+        await _fetchPosts();
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Lỗi khi tải thông tin người dùng: $e")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
     final String? email = user?.email;
-
+    if (_isLoading) {
+      return const LoadingScreen();
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       drawer: Drawer(
@@ -34,7 +100,11 @@ class HomeTab extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundImage: AssetImage("assets/icons/logo.png"),
+                    backgroundImage:
+                        _currentUser?.avatar != null
+                            ? NetworkImage(_currentUser!.avatar!)
+                            : const AssetImage("assets/icons/logo.png")
+                                as ImageProvider,
                   ),
                   const SizedBox(height: 10),
                   Text(
@@ -75,10 +145,7 @@ class HomeTab extends StatelessWidget {
         ),
       ),
       body: RefreshIndicator(
-        onRefresh: () async {
-          await Future.delayed(const Duration(seconds: 1));
-          return;
-        },
+        onRefresh: _fetchPosts,
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
@@ -160,41 +227,17 @@ class HomeTab extends StatelessWidget {
               ),
             ),
             SliverToBoxAdapter(
-              child: FutureBuilder<int?>(
-                future: _userService.getCurrentUserUid(),
-                builder: (context, userSnapshot) {
-                  if (userSnapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (userSnapshot.hasError) {
-                    return Center(child: Text('Error: ${userSnapshot.error}'));
-                  }
-
-                  final int? currentUserUid = userSnapshot.data;
-
-                  return FutureBuilder<List<Post>>(
-                    future: _postService.fetchPosts(),
-                    builder: (context, postSnapshot) {
-                      if (postSnapshot.connectionState ==
-                          ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (postSnapshot.hasError) {
-                        return Center(
-                          child: Text('Error: ${postSnapshot.error}'),
-                        );
-                      }
-                      if (!postSnapshot.hasData || postSnapshot.data!.isEmpty) {
-                        return const Center(child: Text('No posts available'));
-                      }
-
-                      final posts = postSnapshot.data!;
-                      return ListView.builder(
+              child:
+                  _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _posts.isEmpty
+                      ? const Center(child: Text('Không có bài viết nào'))
+                      : ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: posts.length,
+                        itemCount: _posts.length,
                         itemBuilder: (context, index) {
-                          final post = posts[index];
+                          final post = _posts[index];
                           return Padding(
                             padding: const EdgeInsets.symmetric(
                               vertical: 4.0,
@@ -202,15 +245,11 @@ class HomeTab extends StatelessWidget {
                             ),
                             child: CardPost(
                               post: post,
-                              currentUserUid: currentUserUid?.toString(),
+                              currentUserUid: _currentUserUid?.toString(),
                             ),
                           );
                         },
-                      );
-                    },
-                  );
-                },
-              ),
+                      ),
             ),
           ],
         ),

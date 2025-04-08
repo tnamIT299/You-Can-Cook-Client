@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
         // builder: DevicePreview.appBuilder,
         title: 'Flutter Demo',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
           scaffoldBackgroundColor: AppColors.background,
         ),
         home: AuthWrapper(),

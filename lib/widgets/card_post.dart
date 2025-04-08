@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:you_can_cook/models/Post.dart';
+import 'package:you_can_cook/services/FollowerService.dart';
 import 'package:you_can_cook/utils/color.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import 'package:timeago/src/messages/vi_messages.dart';
 import 'package:you_can_cook/screens/Main/main_tab/profile_tab.dart';
+import 'package:you_can_cook/screens/Main/sub_screens/post/create_post.dart';
+import 'package:you_can_cook/screens/Main/sub_screens/post/detail_post.dart';
+import 'package:you_can_cook/widgets/dialog_noti.dart';
+import 'package:you_can_cook/services/PostService.dart';
+import 'package:you_can_cook/db/db.dart';
 
 void registerTimeagoMessages() {
   timeago.setLocaleMessages('vi', timeago.ViMessages());
@@ -21,11 +26,15 @@ class CardPost extends StatefulWidget {
 }
 
 class _CardPostState extends State<CardPost> {
+  late final PostService _postService;
+  late final FollowerService _followerService;
   int _currentImageIndex = 0;
+  bool _isExpanded = false;
   @override
   void initState() {
     super.initState();
-    // Đăng ký ngôn ngữ Tiếng Việt
+    _postService = PostService(supabaseClient);
+    _followerService = FollowerService();
     timeago.setLocaleMessages('vi', timeago.ViMessages());
   }
 
@@ -34,10 +43,7 @@ class _CardPostState extends State<CardPost> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder:
-            (context) => ProfileTab(
-              userId: widget.post.uid,
-            ), // Truyền UID của người đăng
+        builder: (context) => ProfileTab(userId: widget.post.uid),
       ),
     );
   }
@@ -61,10 +67,7 @@ class _CardPostState extends State<CardPost> {
         children: [
           ListTile(
             leading: GestureDetector(
-              onTap:
-                  () => _navigateToProfile(
-                    context,
-                  ), // Chuyển hướng khi nhấn avatar
+              onTap: () => _navigateToProfile(context),
               child: CircleAvatar(
                 backgroundImage:
                     widget.post.avatar != null
@@ -74,10 +77,7 @@ class _CardPostState extends State<CardPost> {
               ),
             ),
             title: GestureDetector(
-              onTap:
-                  () => _navigateToProfile(
-                    context,
-                  ), // Chuyển hướng khi nhấn nickname
+              onTap: () => _navigateToProfile(context),
               child: Text(widget.post.nickname ?? 'Unknown User'),
             ),
             trailing:
@@ -85,14 +85,169 @@ class _CardPostState extends State<CardPost> {
                     ? IconButton(
                       icon: const Icon(Icons.more_horiz),
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("More options for post owner"),
+                        showModalBottomSheet(
+                          context: context,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(20),
+                            ),
                           ),
+                          builder: (BuildContext context) {
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  leading: const Icon(
+                                    Icons.read_more,
+                                    color: Colors.blue,
+                                  ),
+                                  title: const Text("Xem bài viết"),
+                                  onTap: () {
+                                    Navigator.pop(context); // Đóng modal
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => DetailPostScreen(
+                                              post: widget.post,
+                                              currentUserUid:
+                                                  widget.currentUserUid,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                ListTile(
+                                  leading: const Icon(
+                                    Icons.edit,
+                                    color: Colors.blue,
+                                  ),
+                                  title: const Text("Chỉnh sửa bài viết"),
+                                  onTap: () {
+                                    Navigator.pop(context); // Đóng modal
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => CreateNewPostScreen(
+                                              post: widget.post,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                ListTile(
+                                  leading: const Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
+                                  ),
+                                  title: const Text("Xóa bài viết"),
+                                  onTap: () {
+                                    show_Dialog(
+                                      context,
+                                      "Xóa bài viết",
+                                      "Bạn có chắc chắn muốn xóa bài viết này không?",
+                                      () async {
+                                        _postService.deletePost(
+                                          widget.post.pid!,
+                                        );
+                                        Navigator.pop(context); // Đóng modal
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              "Bài viết đã được xóa",
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      () {
+                                        Navigator.pop(context); // Đóng modal
+                                      }, // Add the missing argument (e.g., an empty callback)
+                                    );
+                                  },
+                                ),
+                              ],
+                            );
+                          },
                         );
                       },
                     )
-                    : null,
+                    : IconButton(
+                      icon: const Icon(Icons.more_horiz),
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(20),
+                            ),
+                          ),
+                          builder: (BuildContext context) {
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  leading: const Icon(
+                                    Icons.read_more,
+                                    color: Colors.blue,
+                                  ),
+                                  title: const Text("Xem bài viết"),
+                                  onTap: () {
+                                    Navigator.pop(context); // Đóng modal
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => DetailPostScreen(
+                                              post: widget.post,
+                                              currentUserUid:
+                                                  widget.currentUserUid,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                ListTile(
+                                  leading: const Icon(
+                                    Icons.block,
+                                    color: Colors.red,
+                                  ),
+                                  title: Text(
+                                    "Huỷ theo dõi ${widget.post.nickname!}",
+                                  ),
+                                  onTap: () {
+                                    show_Dialog(
+                                      context,
+                                      "Huỷ theo dõi",
+                                      "Bạn có chắc chắn muốn huỷ theo dõi ${widget.post.nickname} không?",
+                                      () async {
+                                        _followerService.unfollow(
+                                          int.parse(widget.currentUserUid!),
+                                          widget.post.uid,
+                                        );
+                                        Navigator.pop(context); // Đóng modal
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text("Đã huỷ theo dõi"),
+                                          ),
+                                        );
+                                      },
+                                      () {
+                                        Navigator.pop(context); // Đóng modal
+                                      }, // Add the missing argument (e.g., an empty callback)
+                                    );
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
           ),
           if (images != null && images.isNotEmpty)
             images.length > 1
@@ -176,73 +331,7 @@ class _CardPostState extends State<CardPost> {
                     );
                   },
                 ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.favorite_border,
-                        color: AppColors.primary,
-                      ),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Like functionality here"),
-                          ),
-                        );
-                      },
-                    ),
-                    Text(
-                      "${widget.post.plike ?? 0}",
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    IconButton(
-                      color: AppColors.primary,
-                      icon: const Icon(Icons.comment),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Comment functionality here"),
-                          ),
-                        );
-                      },
-                    ),
-                    Text(
-                      "${widget.post.pcomment ?? 0}",
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    IconButton(
-                      color: AppColors.primary,
-                      icon: const Icon(Icons.bookmark_border),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Save functionality here"),
-                          ),
-                        );
-                      },
-                    ),
-                    Text(
-                      "${widget.post.psave ?? 0}",
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          FunctionButton(widget: widget),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Text(
@@ -252,9 +341,37 @@ class _CardPostState extends State<CardPost> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            child: Text(
-              widget.post.pcontent ?? '',
-              style: const TextStyle(fontSize: 14, color: Colors.black87),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.post.pcontent ?? '',
+                  maxLines:
+                      _isExpanded ? null : 1, // Hiển thị đầy đủ nếu mở rộng
+                  overflow:
+                      _isExpanded
+                          ? TextOverflow.visible
+                          : TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 14, color: Colors.black87),
+                ),
+                if ((widget.post.pcontent ?? '').length >
+                    100) // Kiểm tra độ dài nội dung
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isExpanded = !_isExpanded; // Đổi trạng thái khi nhấn
+                      });
+                    },
+                    child: Text(
+                      _isExpanded ? "Thu gọn" : "Xem thêm",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
 
@@ -274,6 +391,77 @@ class _CardPostState extends State<CardPost> {
                     }).toList(),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class FunctionButton extends StatelessWidget {
+  const FunctionButton({super.key, required this.widget});
+
+  final CardPost widget;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.favorite_border,
+                  color: AppColors.primary,
+                ),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Like functionality here")),
+                  );
+                },
+              ),
+              Text(
+                "${widget.post.plike ?? 0}",
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              IconButton(
+                color: AppColors.primary,
+                icon: const Icon(Icons.comment),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Comment functionality here")),
+                  );
+                },
+              ),
+              Text(
+                "${widget.post.pcomment ?? 0}",
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              IconButton(
+                color: AppColors.primary,
+                icon: const Icon(Icons.bookmark_border),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Save functionality here")),
+                  );
+                },
+              ),
+              Text(
+                "${widget.post.psave ?? 0}",
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
         ],
       ),
     );

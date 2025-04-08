@@ -54,6 +54,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
             MaterialPageRoute(builder: (context) => LoginScreen()),
           );
         },
+        () {
+          Navigator.pop(context); // Đóng moda
+        }, // Provide an empty callback function as the fifth argument
       );
     }
   }
