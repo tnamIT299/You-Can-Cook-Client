@@ -10,6 +10,7 @@ import 'package:you_can_cook/screens/Main/sub_screens/post/detail_post.dart';
 import 'package:you_can_cook/widgets/dialog_noti.dart';
 import 'package:you_can_cook/services/PostService.dart';
 import 'package:you_can_cook/db/db.dart';
+import 'package:you_can_cook/widgets/report-dialog.dart';
 
 void registerTimeagoMessages() {
   timeago.setLocaleMessages('vi', timeago.ViMessages());
@@ -48,6 +49,22 @@ class _CardPostState extends State<CardPost> {
     );
   }
 
+  Future<void> _showReportDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => ReportDialog(
+            reporterUid: widget.currentUserUid!,
+            reportedUid: widget.post.uid.toString(), // UID của người bị báo cáo
+            pid: widget.post.pid.toString(), // ID của bài post (nếu có)
+          ),
+    );
+
+    if (result == true) {
+      // Xử lý thêm nếu cần sau khi báo cáo thành công
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isPostOwner =
@@ -78,7 +95,11 @@ class _CardPostState extends State<CardPost> {
             ),
             title: GestureDetector(
               onTap: () => _navigateToProfile(context),
-              child: Text(widget.post.nickname ?? 'Unknown User'),
+              child: Text(
+                widget.post.nickname ?? widget.post.name ?? '',
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
             ),
             trailing:
                 isPostOwner
@@ -216,6 +237,8 @@ class _CardPostState extends State<CardPost> {
                                   ),
                                   title: Text(
                                     "Huỷ theo dõi ${widget.post.nickname!}",
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
                                   ),
                                   onTap: () {
                                     show_Dialog(
@@ -240,6 +263,17 @@ class _CardPostState extends State<CardPost> {
                                         Navigator.pop(context); // Đóng modal
                                       }, // Add the missing argument (e.g., an empty callback)
                                     );
+                                  },
+                                ),
+                                ListTile(
+                                  leading: const Icon(
+                                    Icons.report,
+                                    color: Colors.red,
+                                  ),
+                                  title: const Text("Báo cáo người dùng "),
+                                  onTap: () {
+                                    Navigator.pop(context); // Đóng modal
+                                    _showReportDialog();
                                   },
                                 ),
                               ],
@@ -434,8 +468,15 @@ class FunctionButton extends StatelessWidget {
                 color: AppColors.primary,
                 icon: const Icon(Icons.comment),
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Comment functionality here")),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => DetailPostScreen(
+                            post: widget.post,
+                            currentUserUid: widget.currentUserUid,
+                          ),
+                    ),
                   );
                 },
               ),

@@ -73,4 +73,51 @@ class FollowerService {
       throw Exception('Failed to unfollow: $e');
     }
   }
+
+  // Lấy danh sách ĐANG THEO DÕI (Following)
+  Future<List<Map<String, dynamic>>> getFollowing(int userId) async {
+    try {
+      final response = await _client
+          .from('followers')
+          .select('following_id')
+          .eq('follower_id', userId);
+
+      if (response.isEmpty) return [];
+
+      final followingIds =
+          response.map((e) => e['following_id'] as int).toList();
+
+      final usersResponse = await _client
+          .from('users')
+          .select('uid, name, nickname, avatar')
+          .inFilter('uid', followingIds);
+
+      return usersResponse;
+    } catch (e) {
+      throw Exception('Failed to fetch following list: $e');
+    }
+  }
+
+  // Lấy danh sách NGƯỜI THEO DÕI (Followers)
+  Future<List<Map<String, dynamic>>> getFollowers(int userId) async {
+    try {
+      final response = await _client
+          .from('followers')
+          .select('follower_id')
+          .eq('following_id', userId);
+
+      if (response.isEmpty) return [];
+
+      final followerIds = response.map((e) => e['follower_id'] as int).toList();
+
+      final usersResponse = await _client
+          .from('users')
+          .select('uid, name, nickname, avatar')
+          .inFilter('uid', followerIds);
+
+      return usersResponse;
+    } catch (e) {
+      throw Exception('Failed to fetch followers list: $e');
+    }
+  }
 }

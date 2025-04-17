@@ -109,9 +109,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 CircleAvatar(
                   radius: 50,
                   backgroundImage:
-                      _avatar.startsWith('assets') || _avatar.startsWith('http')
-                          ? NetworkImage(_avatar) as ImageProvider
-                          : FileImage(File(_avatar)),
+                      _avatar.startsWith('http')
+                          ? NetworkImage(_avatar)
+                          : _avatar.startsWith('assets/')
+                          ? AssetImage(_avatar)
+                          : FileImage(File(_avatar)) as ImageProvider,
                 ),
                 Container(
                   height: 30,

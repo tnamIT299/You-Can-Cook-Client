@@ -16,14 +16,15 @@ class RecipesTabSearch extends StatefulWidget {
 
 class _RecipesTabSearchState extends State<RecipesTabSearch> {
   final PostService _postService = PostService(db.supabaseClient);
-  List<Post> topPosts = [];
-  List<Post> filteredPosts = [];
+  List<Post> topPosts = []; // 5 bài đăng có nhiều lượt thích nhất
+  List<Post> allPosts = []; // Tất cả bài đăng
+  List<Post> filteredPosts = []; // Danh sách hiển thị
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchTopPosts();
+    _fetchInitialData();
   }
 
   @override
@@ -34,12 +35,15 @@ class _RecipesTabSearchState extends State<RecipesTabSearch> {
     }
   }
 
-  Future<void> _fetchTopPosts() async {
+  Future<void> _fetchInitialData() async {
     try {
-      final posts = await _postService.get5PostMaxLike();
+      final topPostsResult = await _postService.get5PostMaxLike();
+      final allPostsResult =
+          await _postService.getAllPosts(); // Giả định có hàm này
       setState(() {
-        topPosts = posts;
-        filteredPosts = posts;
+        topPosts = topPostsResult;
+        allPosts = allPostsResult;
+        filteredPosts = topPosts; // Mặc định hiển thị 5 bài đăng hàng đầu
         isLoading = false;
       });
       _filterPosts();
@@ -56,7 +60,8 @@ class _RecipesTabSearchState extends State<RecipesTabSearch> {
   void _filterPosts() {
     if (widget.searchQuery.isEmpty) {
       setState(() {
-        filteredPosts = topPosts;
+        filteredPosts =
+            topPosts; // Hiển thị 5 bài đăng hàng đầu khi không có từ khóa
       });
       return;
     }
@@ -64,7 +69,7 @@ class _RecipesTabSearchState extends State<RecipesTabSearch> {
     final query = widget.searchQuery.toLowerCase();
     setState(() {
       filteredPosts =
-          topPosts.where((post) {
+          allPosts.where((post) {
             final content = (post.pcontent ?? '').toLowerCase();
             final hashtags = (post.phashtag ?? []).join(' ').toLowerCase();
             return content.contains(query) || hashtags.contains(query);
@@ -79,7 +84,7 @@ class _RecipesTabSearchState extends State<RecipesTabSearch> {
     }
 
     if (filteredPosts.isEmpty) {
-      return const Center(child: Text("Không có bài đăng nào."));
+      return const Center(child: Text("Không tìm thấy bài đăng nào phù hợp."));
     }
 
     return GridView.builder(
@@ -159,7 +164,7 @@ class CardPostSearch extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Text(
-              post.pcontent ?? "No content available",
+              post.pcontent ?? "Không có nội dung",
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

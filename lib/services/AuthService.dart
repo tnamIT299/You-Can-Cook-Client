@@ -28,6 +28,7 @@ class AuthService {
           'email': email,
           'name': name,
           'onlineStatus': 'true',
+          'createAt': DateTime.now().toIso8601String(),
         });
       } else {
         await _supabase
@@ -110,14 +111,15 @@ class AuthService {
       await _supabase.from('users').insert({
         'email': userCredential.user?.email,
         'name': fullName.trim(),
-        'createAt': DateTime.now(),
+        'createAt': DateTime.now().toIso8601String(),
       });
 
       return null;
     } on firebase_auth.FirebaseAuthException catch (e) {
       return e.message ?? 'Có lỗi xảy ra';
     } catch (e) {
-      throw Exception('Có lỗi xảy ra');
+      print(e);
+      throw Exception(e);
     }
   }
 
@@ -146,6 +148,51 @@ class AuthService {
         default:
           throw Exception('Đã xảy ra lỗi. Vui lòng thử lại sau');
       }
+    }
+  }
+
+  // Change password
+  Future<String?> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      // Kiểm tra xem người dùng đã đăng nhập chưa
+      final user = _auth.currentUser;
+      if (user == null) {
+        return 'Vui lòng đăng nhập để đổi mật khẩu';
+      }
+
+      // Kiểm tra mật khẩu mới
+      if (newPassword.length < 6) {
+        return 'Mật khẩu mới phải chứa ít nhất 6 ký tự';
+      }
+
+      // Xác thực lại người dùng với mật khẩu hiện tại
+      final credential = firebase_auth.EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      // Đổi mật khẩu
+      await user.updatePassword(newPassword);
+      return null; // Thành công
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'wrong-password':
+          return 'Mật khẩu hiện tại không đúng';
+        case 'weak-password':
+          return 'Mật khẩu mới quá yếu';
+        case 'too-many-requests':
+          return 'Bạn đã yêu cầu quá nhiều lần. Hãy thử lại sau';
+        case 'user-not-found':
+          return 'Không tìm thấy người dùng';
+        default:
+          return 'Có lỗi xảy ra: ${e.message}';
+      }
+    } catch (e) {
+      return 'Có lỗi xảy ra';
     }
   }
 }

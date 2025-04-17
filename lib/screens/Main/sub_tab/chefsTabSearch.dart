@@ -15,30 +15,33 @@ class ChefsTabSearch extends StatefulWidget {
 
 class _ChefsTabSearchState extends State<ChefsTabSearch> {
   final UserService _userService = UserService();
-  List<userModel.User> topChefs = [];
-  List<userModel.User> filteredChefs = [];
+  List<userModel.User> topChefs = []; // 5 đầu bếp đề xuất
+  List<userModel.User> allChefs = []; // Toàn bộ người dùng
+  List<userModel.User> filteredChefs = []; // Danh sách hiển thị
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchTopChefs();
+    _fetchInitialData(); // Lấy dữ liệu ban đầu
   }
 
   @override
   void didUpdateWidget(covariant ChefsTabSearch oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.searchQuery != widget.searchQuery) {
-      _filterChefs();
+      _filterChefs(); // Lọc lại khi searchQuery thay đổi
     }
   }
 
-  Future<void> _fetchTopChefs() async {
+  Future<void> _fetchInitialData() async {
     try {
-      final chefs = await _userService.get5UserMaxFolllwer();
+      final topChefsResult = await _userService.get5UserMaxFolllwer();
+      final allChefsResult = await _userService.getAllUsers();
       setState(() {
-        topChefs = chefs;
-        filteredChefs = chefs;
+        topChefs = topChefsResult;
+        allChefs = allChefsResult;
+        filteredChefs = topChefs;
         isLoading = false;
       });
       _filterChefs();
@@ -52,6 +55,7 @@ class _ChefsTabSearchState extends State<ChefsTabSearch> {
     }
   }
 
+  // Lọc danh sách dựa trên searchQuery
   void _filterChefs() {
     if (widget.searchQuery.isEmpty) {
       setState(() {
@@ -63,7 +67,7 @@ class _ChefsTabSearchState extends State<ChefsTabSearch> {
     final query = widget.searchQuery.toLowerCase();
     setState(() {
       filteredChefs =
-          topChefs.where((chef) {
+          allChefs.where((chef) {
             final name = (chef.name).toLowerCase();
             final nickname = (chef.nickname ?? '').toLowerCase();
             return name.contains(query) || nickname.contains(query);
@@ -78,7 +82,7 @@ class _ChefsTabSearchState extends State<ChefsTabSearch> {
     }
 
     if (filteredChefs.isEmpty) {
-      return const Center(child: Text("Không có đầu bếp nào."));
+      return const Center(child: Text("Không tìm thấy đầu bếp nào phù hợp."));
     }
 
     return ListView.builder(

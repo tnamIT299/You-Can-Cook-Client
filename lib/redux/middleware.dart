@@ -39,12 +39,20 @@ void appMiddleware(
       store.dispatch(SetError(e.toString()));
     }
   } else if (action is FetchUserInfoById) {
-    // Thêm xử lý cho FetchUserInfoById
     store.dispatch(SetLoading(true));
     try {
       final userService = UserService();
       final userInfo = await userService.getUserInfoById(action.userId);
       store.dispatch(SetUserInfo(userInfo));
+    } catch (e) {
+      store.dispatch(SetError(e.toString()));
+    }
+  } else if (action is FetchProfileUserInfo) {
+    store.dispatch(SetLoading(true));
+    try {
+      final userService = UserService();
+      final userInfo = await userService.getUserInfoById(action.userId);
+      store.dispatch(SetProfileUserInfo(userInfo));
     } catch (e) {
       store.dispatch(SetError(e.toString()));
     }

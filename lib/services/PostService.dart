@@ -2,6 +2,7 @@ import 'package:you_can_cook/models/Post.dart';
 import 'package:supabase/supabase.dart';
 import 'dart:io';
 import 'package:mime/mime.dart';
+import 'package:you_can_cook/models/Comment.dart';
 
 class PostService {
   final SupabaseClient _client;
@@ -12,12 +13,17 @@ class PostService {
     final response = await _client
         .from('posts')
         .select(
-          '*, users!posts_uid_fkey(nickname, avatar, uid)',
+          '*, users!posts_uid_fkey(name, nickname, avatar, uid)',
         ) // Join với bảng users
         .order('createAt', ascending: false); // Sắp xếp theo thời gian mới nhất
     return (response as List<dynamic>)
         .map((post) => Post.fromMap(post))
         .toList();
+  }
+
+  Future<List<Post>> getAllPosts() async {
+    final response = await _client.from('posts').select();
+    return List<Post>.from(response.map((post) => Post.fromMap(post)));
   }
 
   Future<List<Post>> fetchFilteredPosts(int currentUserUid) async {
@@ -36,7 +42,7 @@ class PostService {
       // Bước 2: Truy vấn bài post theo các tiêu chí
       final response = await _client
           .from('posts')
-          .select('*, users!posts_uid_fkey(nickname, avatar, uid)')
+          .select('*, users!posts_uid_fkey(name, nickname, avatar, uid)')
           .or(
             'prange.eq.Công khai,uid.eq.$currentUserUid${followingIds.isNotEmpty ? ',uid.in.(${followingIds.join(',')})' : ''}',
           ) // Lọc bài post: Công khai, của chính người dùng, hoặc của người đang theo dõi
@@ -54,7 +60,10 @@ class PostService {
   }
 
   Future<List<Post>> fetchPostsByUid(int uid) async {
-    final response = await _client.from('posts').select().eq('uid', uid);
+    final response = await _client
+        .from('posts')
+        .select('*, users(name, nickname, avatar)')
+        .eq('uid', uid);
     return (response as List<dynamic>)
         .map((post) => Post.fromMap(post))
         .toList();
@@ -82,7 +91,41 @@ class PostService {
   }
 
   Future<void> deletePost(int postId) async {
-    await _client.from('posts').delete().eq('pid', postId);
+    try {
+      // Bắt đầu một transaction
+      //await _client.rpc('begin_transaction');
+
+      // 1. Xóa tất cả các báo cáo liên quan đến bài viết này
+      await _client.from('userReport').delete().eq('pid', postId);
+
+      // 2. Xóa tất cả các like liên quan đến bài viết này
+      // await _client
+      //     .from('likes')
+      //     .delete()
+      //     .eq('post_id', postId);
+
+      // // 3. Xóa tất cả các comment liên quan đến bài viết này
+      // await _client
+      //     .from('comments')
+      //     .delete()
+      //     .eq('post_id', postId);
+
+      // // 4. Xóa tất cả các bookmark liên quan đến bài viết này
+      // await _client
+      //     .from('bookmarks')
+      //     .delete()
+      //     .eq('post_id', postId);
+
+      // 5. Cuối cùng xóa bài viết
+      await _client.from('posts').delete().eq('pid', postId);
+
+      // Kết thúc transaction
+      // await _client.rpc('commit_transaction');
+    } catch (e) {
+      // Nếu có lỗi, rollback transaction
+      //await _client.rpc('rollback_transaction');
+      throw Exception('Failed to delete post: $e');
+    }
   }
 
   Future<String> uploadImage(File image, String path) async {
@@ -162,7 +205,7 @@ class PostService {
     try {
       final response = await _client
           .from('posts')
-          .select('*, users!posts_uid_fkey(nickname, avatar, uid)')
+          .select('*, users!posts_uid_fkey(name,nickname, avatar, uid)')
           .ilike('phashtag', '%$hashtag%') // Tìm hashtag trong chuỗi phashtag
           .order(
             'createAt',
@@ -174,6 +217,45 @@ class PostService {
           .toList();
     } catch (e) {
       throw Exception('Failed to fetch posts by hashtag: $e');
+    }
+  }
+
+  // Gửi bình luận mới
+  Future<void> addComment({
+    required int userId,
+    required int postId,
+    required String content,
+  }) async {
+    try {
+      await _client.from('comments').insert({
+        'uid': userId,
+        'pid': postId,
+        'content': content,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      throw Exception('Failed to add comment: $e');
+    }
+  }
+
+  // Lấy danh sách bình luận cho một bài đăng
+  Future<List<Comment>> getCommentsByPostId(
+    int postId, {
+    int limit = 8,
+    int offset = 0,
+  }) async {
+    try {
+      final response = await _client
+          .from('comments')
+          .select('*, users!uid(avatar, nickname, name)')
+          .eq('pid', postId)
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+      return List<Comment>.from(
+        response.map((comment) => Comment.fromMap(comment)),
+      );
+    } catch (e) {
+      throw Exception('Failed to fetch comments: $e');
     }
   }
 }

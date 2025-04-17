@@ -11,6 +11,7 @@ import 'package:you_can_cook/db/db.dart' as db;
 import 'package:you_can_cook/models/Post.dart';
 import 'package:you_can_cook/models/User.dart' as userModel;
 import 'package:you_can_cook/widgets/loading_screen.dart';
+import 'package:you_can_cook/screens/drawerScreens/badgeScreen.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -74,9 +75,6 @@ class _HomeTabState extends State<HomeTab> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lỗi khi tải thông tin người dùng: $e")),
-      );
     }
   }
 
@@ -127,9 +125,14 @@ class _HomeTabState extends State<HomeTab> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.favorite),
-              title: const Text('Yêu thích'),
-              onTap: () {},
+              leading: const Icon(Icons.emoji_events),
+              title: const Text('Khám phá kho huy hiệu'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => BadgeScreen()),
+                );
+              },
             ),
             ListTile(
               leading: const Icon(Icons.settings),

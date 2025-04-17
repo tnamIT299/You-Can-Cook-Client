@@ -29,11 +29,6 @@ class UserService {
         .from('users')
         .update(updates)
         .eq('email', email);
-
-    if (response.error != null) {
-      // Sửa lỗi kiểm tra
-      throw Exception('Failed to update user info: ${response.error!.message}');
-    }
   }
 
   Future<void> updateUserPoints(int uid, int points) async {
@@ -87,9 +82,9 @@ class UserService {
             .from('users')
             .select('uid')
             .eq('email', currentUser.email!)
-            .single();
+            .maybeSingle();
 
-    return response['uid'] as int?;
+    return response?['uid'] as int?;
   }
 
   Future<userModel.User?> getUserByEmail(String email) async {

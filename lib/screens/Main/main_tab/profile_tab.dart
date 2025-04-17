@@ -12,7 +12,6 @@ import 'package:you_can_cook/widgets/loading_screen.dart';
 import 'package:you_can_cook/utils/color.dart';
 import 'package:you_can_cook/services/FollowerService.dart';
 import 'package:you_can_cook/services/UserService.dart';
-import 'package:you_can_cook/utils/color.dart';
 
 class ProfileTab extends StatefulWidget {
   final int userId;
@@ -25,7 +24,7 @@ class ProfileTab extends StatefulWidget {
 class _ProfileTabState extends State<ProfileTab>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  int? currentUserUid; // Lưu UID của người dùng hiện tại
+  int? currentUserUid;
 
   @override
   void initState() {
@@ -33,38 +32,30 @@ class _ProfileTabState extends State<ProfileTab>
     print("UserId passed to ProfileTab: ${widget.userId}");
     _tabController = TabController(length: 3, vsync: this);
 
-    // Lấy UID của người dùng hiện tại
     _fetchCurrentUserUid();
 
-    // Tải dữ liệu ngay khi màn hình được khởi tạo
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final store = StoreProvider.of<AppState>(context, listen: false);
+      await store.dispatch(FetchProfileUserInfo(widget.userId));
 
-      // Fetch thông tin user dựa trên widget.userId
-      await store.dispatch(FetchUserInfoById(widget.userId));
-
-      // Lấy userInfo từ Redux store sau khi fetch
-      final userInfo = store.state.userInfo;
-
-      if (userInfo != null && userInfo.uid != null) {
-        // Fetch bài đăng và ảnh của user
-        store.dispatch(FetchUserPostsAndPhotos(userInfo.uid!));
+      final profileUserInfo = store.state.profileUserInfo;
+      if (profileUserInfo != null && profileUserInfo.uid != null) {
+        store.dispatch(FetchUserPostsAndPhotos(profileUserInfo.uid));
       } else {
         debugPrint(
-          "User info is null or UID is missing for userId: ${widget.userId}",
+          "Profile user info is null or UID is missing for userId: ${widget.userId}",
         );
       }
     });
   }
 
-  // Lấy UID của người dùng hiện tại
   Future<void> _fetchCurrentUserUid() async {
     final userService = UserService();
     final uid = await userService.getCurrentUserUid();
     if (uid != null) {
       setState(() {
         currentUserUid = uid;
-        print(uid);
+        print("Current user UID: $uid");
       });
     } else {
       debugPrint("Current user UID is null.");
@@ -73,13 +64,13 @@ class _ProfileTabState extends State<ProfileTab>
 
   Future<void> _refreshData() async {
     final store = StoreProvider.of<AppState>(context, listen: false);
-    final userInfo = store.state.userInfo;
+    final profileUserInfo = store.state.profileUserInfo;
 
-    if (userInfo != null && userInfo.uid != null) {
-      store.dispatch(FetchUserPostsAndPhotos(userInfo.uid!));
-      store.dispatch(FetchUserInfoById(userInfo.uid!));
+    if (profileUserInfo != null && profileUserInfo.uid != null) {
+      store.dispatch(FetchUserPostsAndPhotos(profileUserInfo.uid));
+      store.dispatch(FetchProfileUserInfo(profileUserInfo.uid));
     } else {
-      debugPrint("UID is null, cannot refresh data.");
+      debugPrint("Profile UID is null, cannot refresh data.");
     }
   }
 
@@ -119,8 +110,8 @@ class _ProfileTabState extends State<ProfileTab>
             return const LoadingScreen();
           } else if (state.errorMessage != null) {
             return Center(child: Text(state.errorMessage!));
-          } else if (state.userInfo != null) {
-            final userInfo = state.userInfo!;
+          } else if (state.profileUserInfo != null) {
+            final userInfo = state.profileUserInfo;
             final isOwnProfile =
                 currentUserUid != null && currentUserUid == widget.userId;
 
@@ -144,7 +135,7 @@ class _ProfileTabState extends State<ProfileTab>
                                 backgroundColor: Colors.white,
                                 backgroundImage:
                                     userInfo.avatar != null
-                                        ? NetworkImage(userInfo.avatar!)
+                                        ? NetworkImage(userInfo.avatar)
                                         : const AssetImage(
                                               "assets/icons/logo.png",
                                             )
@@ -185,7 +176,7 @@ class _ProfileTabState extends State<ProfileTab>
                                             widget.userId,
                                             isFollowing,
                                           );
-                                          setState(() {}); // Cập nhật UI
+                                          setState(() {});
                                         } catch (e) {
                                           ScaffoldMessenger.of(
                                             context,
@@ -260,7 +251,7 @@ class _ProfileTabState extends State<ProfileTab>
                                 ),
                                 if (userInfo.nickname != null) ...[
                                   Text(
-                                    userInfo.nickname!,
+                                    userInfo.nickname,
                                     style: const TextStyle(
                                       fontSize: 16,
                                       color: Colors.grey,
@@ -292,7 +283,7 @@ class _ProfileTabState extends State<ProfileTab>
                       ),
                     ),
                   ),
-                  if (userInfo.bio != null && userInfo.bio!.isNotEmpty)
+                  if (userInfo.bio != null && userInfo.bio.isNotEmpty)
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -301,7 +292,7 @@ class _ProfileTabState extends State<ProfileTab>
                         ),
                         child: Center(
                           child: Text(
-                            userInfo.bio!,
+                            userInfo.bio,
                             style: const TextStyle(
                               fontSize: 16,
                               color: Colors.grey,
@@ -348,11 +339,11 @@ class _ProfileTabState extends State<ProfileTab>
                         state.userPhotos.isEmpty
                             ? const Center(child: Text("Chưa có ảnh nào"))
                             : CardPhotoProfile(photos: state.userPhotos),
-                        userInfo.badges == null || userInfo.badges!.isEmpty
+                        userInfo.badges == null || userInfo.badges.isEmpty
                             ? const Center(child: Text("Chưa có huy hiệu nào"))
                             : CardBadgesTab(
                               badges:
-                                  userInfo.badges!
+                                  userInfo.badges
                                       .map(
                                         (badge) => {
                                           "image": "assets/icons/logo.png",

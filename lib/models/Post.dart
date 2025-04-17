@@ -13,6 +13,7 @@ class Post {
   final String? prange;
   final DateTime? createAt;
   final String? nickname; // Từ bảng users
+  final String? name;
   final String? avatar; // Từ bảng users
 
   Post({
@@ -27,6 +28,7 @@ class Post {
     this.prange,
     this.createAt,
     this.nickname,
+    this.name,
     this.avatar,
   });
 
@@ -42,6 +44,7 @@ class Post {
     String? prange,
     DateTime? createAt,
     String? nickname,
+    String? name,
     String? avatar,
   }) {
     return Post(
@@ -56,6 +59,7 @@ class Post {
       prange: prange ?? this.prange,
       createAt: createAt ?? this.createAt,
       nickname: nickname ?? this.nickname,
+      name: name ?? this.name,
       avatar: avatar ?? this.avatar,
     );
   }
@@ -105,6 +109,7 @@ class Post {
               : null,
       nickname:
           map['users'] != null ? map['users']['nickname'] as String : null,
+      name: map['users'] != null ? map['users']['name'] as String : null,
       avatar: map['users'] != null ? map['users']['avatar'] as String? : null,
     );
   }
@@ -123,7 +128,7 @@ class Post {
 
   @override
   String toString() {
-    return 'Post(pid: $pid, uid: $uid, pcontent: $pcontent, pimage: $pimage, phashtag: $phashtag, plike: $plike, pcomment: $pcomment, psave: $psave, prange: $prange, createAt: $createAt, nickname: $nickname, avatar: $avatar)';
+    return 'Post(pid: $pid, uid: $uid, pcontent: $pcontent, pimage: $pimage, phashtag: $phashtag, plike: $plike, pcomment: $pcomment, psave: $psave, prange: $prange, createAt: $createAt, name: $name, nickname: $nickname, avatar: $avatar)';
   }
 
   @override
@@ -141,6 +146,7 @@ class Post {
         other.prange == prange &&
         other.createAt == createAt &&
         other.nickname == nickname &&
+        other.name == name &&
         other.avatar == avatar;
   }
 
@@ -157,6 +163,7 @@ class Post {
         prange.hashCode ^
         createAt.hashCode ^
         nickname.hashCode ^
+        name.hashCode ^
         avatar.hashCode;
   }
 }

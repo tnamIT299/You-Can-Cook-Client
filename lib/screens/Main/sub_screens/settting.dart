@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:you_can_cook/screens/Auth/change_pass.dart';
 import 'package:you_can_cook/services/AuthService.dart';
 import 'package:you_can_cook/screens/Auth/login.dart';
 import 'package:you_can_cook/utils/color.dart';
 import 'package:you_can_cook/screens/drawerScreens/loyalPoint.dart';
+import 'package:you_can_cook/screens/Main/sub_screens/follow-screen.dart';
+import 'package:you_can_cook/services/UserService.dart' as userService;
 
 class SettingsScreen extends StatelessWidget {
   SettingsScreen({super.key});
@@ -21,14 +24,8 @@ class SettingsScreen extends StatelessWidget {
       "subItems": ["Tiếng Việt", "Tiếng Anh"],
     },
     {
-      "title": "Đang theo dõi",
+      "title": "Danh sách theo dõi",
       "icon": Icons.groups,
-      "trailing": Icons.chevron_right,
-      "subItems": null,
-    },
-    {
-      "title": "Người theo dõi",
-      "icon": Icons.people,
       "trailing": Icons.chevron_right,
       "subItems": null,
     },
@@ -41,6 +38,12 @@ class SettingsScreen extends StatelessWidget {
     {
       "title": "Tài khoản & Chính sách",
       "icon": Icons.security,
+      "trailing": Icons.chevron_right,
+      "subItems": null,
+    },
+    {
+      "title": "Đổi mật khẩu",
+      "icon": Icons.lock,
       "trailing": Icons.chevron_right,
       "subItems": null,
     },
@@ -172,6 +175,37 @@ class SettingsScreen extends StatelessWidget {
                     }
                     if (item["title"] == "Ngôn ngữ") {
                       _showSubMenu(context, item["title"], item["subItems"]);
+                    }
+                    if (item["title"] == "Đổi mật khẩu") {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChangePasswordScreen(),
+                        ),
+                      );
+                    }
+                    if (item["title"] == "Danh sách theo dõi") {
+                      userService.UserService().getCurrentUserUid().then((
+                        userId,
+                      ) {
+                        if (userId != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => FollowScreen(userId: userId),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Vui lòng đăng nhập để xem danh sách theo dõi',
+                              ),
+                            ),
+                          );
+                        }
+                      });
                     }
                   },
                 );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:you_can_cook/screens/drawerScreens/badgeScreen.dart';
 import 'package:you_can_cook/services/UserService.dart';
 
 class LoyaltyPointsScreen extends StatefulWidget {
@@ -103,10 +104,10 @@ class _LoyaltyPointsScreenState extends State<LoyaltyPointsScreen> {
             // Nút Convert
             ElevatedButton(
               onPressed: () {
-                // Navigator.pushReplacement(
-                //   context,
-                //   MaterialPageRoute(builder: (context) => Ranked_Tab()),
-                // );
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => BadgeScreen()),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
