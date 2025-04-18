@@ -1,4 +1,5 @@
 import 'package:you_can_cook/models/Post.dart';
+import 'package:you_can_cook/models/Comment.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:you_can_cook/db/db.dart';
 
@@ -64,6 +65,29 @@ class SetProfileUserInfo {
 
 class DeleteUserPhoto {
   final String photoUrl;
-
   DeleteUserPhoto(this.photoUrl);
+}
+
+class FetchComments {
+  final int postId;
+  final int limit;
+  final int offset;
+  FetchComments(this.postId, {this.limit = 8, this.offset = 0});
+}
+
+class SetComments {
+  final int postId;
+  final List<Comment> comments;
+  SetComments(this.postId, this.comments);
+}
+
+class ToggleCommentLike {
+  final int postId;
+  final int commentId;
+  final bool isLiked;
+  ToggleCommentLike(this.postId, this.commentId, this.isLiked);
+}
+
+class ClearComments {
+  ClearComments();
 }

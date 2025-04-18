@@ -16,6 +16,7 @@ import 'package:you_can_cook/services/CommentService.dart';
 import 'package:you_can_cook/services/UserService.dart';
 import 'package:you_can_cook/db/db.dart' as db;
 import 'package:you_can_cook/helper/pick_Image.dart';
+import 'package:you_can_cook/widgets/loading_screen.dart';
 
 void registerTimeagoMessages() {
   timeago.setLocaleMessages('vi', timeago.ViMessages());
@@ -36,7 +37,6 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
   int _currentImageIndex = 0;
   final TextEditingController _commentController = TextEditingController();
   final CommentService _commentService = CommentService(db.supabaseClient);
-  final List<Comment> _comments = [];
   late Post _currentPost;
   bool _isLoadingComments = false;
   bool _hasMoreComments = true;
@@ -52,17 +52,19 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
     super.initState();
     _currentPost = widget.post;
     timeago.setLocaleMessages('vi', timeago.ViMessages());
-    _fetchCurrentUserUid();
-    _fetchComments();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final store = StoreProvider.of<AppState>(context, listen: false);
-      final currentUser = firebase_auth.FirebaseAuth.instance.currentUser;
-      if (currentUser != null && currentUser.email != null) {
-        store.dispatch(FetchUserInfo(currentUser.email!));
-      } else {
-        debugPrint("Không có người dùng đăng nhập hoặc email bị thiếu.");
-      }
+    _fetchCurrentUserUid().then((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final store = StoreProvider.of<AppState>(context, listen: false);
+        final currentUser = firebase_auth.FirebaseAuth.instance.currentUser;
+        if (currentUser != null && currentUser.email != null) {
+          store.dispatch(FetchUserInfo(currentUser.email!)).then((_) {
+            _fetchComments();
+          });
+        } else {
+          debugPrint("Không có người dùng đăng nhập hoặc email bị thiếu.");
+          _fetchComments();
+        }
+      });
     });
   }
 
@@ -74,7 +76,6 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
       _commentController.text = content;
     });
 
-    // Cuộn màn hình xuống TextField
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Scrollable.ensureVisible(
         context,
@@ -110,16 +111,21 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
       _isLoadingComments = true;
     });
 
+    final store = StoreProvider.of<AppState>(context, listen: false);
     try {
-      final newComments = await _commentService.getCommentsByPostId(
-        _currentPost.pid ?? 0,
-        limit: _commentsToShow,
-        offset: _offset,
+      await store.dispatch(
+        FetchComments(
+          widget.post.pid ?? 0,
+          limit: _commentsToShow,
+          offset: _offset,
+        ),
       );
+
+      final comments = store.state.postComments[widget.post.pid ?? 0] ?? [];
       setState(() {
-        _comments.addAll(newComments);
-        _offset += newComments.length;
-        _hasMoreComments = newComments.length == _commentsToShow;
+        _offset += comments.length;
+        final totalComments = _currentPost.pcomment ?? 0;
+        _hasMoreComments = comments.length < totalComments;
         _isLoadingComments = false;
       });
     } catch (e) {
@@ -129,42 +135,28 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
     }
   }
 
-  // Thêm phương thức này vào _DetailPostScreenState
+  void _toggleLikeComment(Comment comment, bool isLiked) {
+    if (_currentUserUid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng đăng nhập để thích bình luận')),
+      );
+      return;
+    }
+
+    final store = StoreProvider.of<AppState>(context, listen: false);
+    store.dispatch(
+      ToggleCommentLike(widget.post.pid ?? 0, comment.id, !isLiked),
+    );
+  }
+
   Future<void> _editComment(int commentId, String newContent) async {
     try {
-      // Tìm vị trí comment cần sửa
-      final index = _comments.indexWhere((comment) => comment.id == commentId);
-      if (index == -1) return;
-
-      // Lưu nội dung cũ để có thể khôi phục nếu có lỗi
-      final oldContent = _comments[index].content;
-
-      // Cập nhật UI ngay lập tức để UX tốt hơn
-      setState(() {
-        _comments[index] = Comment(
-          id: _comments[index].id,
-          userId: _comments[index].userId,
-          postId: _comments[index].postId,
-          content: newContent,
-          createdAt: _comments[index].createdAt,
-          name: _comments[index].name,
-          nickname: _comments[index].nickname,
-          avatar: _comments[index].avatar,
-        );
-      });
-
-      // Gọi API để cập nhật comment
       await _commentService.updateComment(commentId, newContent);
-
+      await _fetchComments();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Đã cập nhật bình luận")));
     } catch (e) {
-      print('Error editing comment: $e');
-
-      // Tải lại toàn bộ bình luận nếu có lỗi
-      _fetchComments();
-
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Lỗi khi cập nhật bình luận: $e')));
@@ -189,32 +181,28 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
       _isLoadingComments = true;
     });
 
+    final store = StoreProvider.of<AppState>(context, listen: false);
     try {
-      await _commentService.addComment(
+      final tempComment = Comment(
+        id: 0,
         userId: userInfo.uid,
         postId: _currentPost.pid ?? 0,
         content: _commentController.text,
+        createdAt: DateTime.now(),
+        avatar: userInfo.avatar,
+        nickname: userInfo.nickname ?? userInfo.name,
+        name: userInfo.name,
+        likeCount: 0,
+        isLiked: false,
       );
 
-      await _commentService.updatePostCommentCount(
-        _currentPost.pid ?? 0,
-        increment: true,
+      final currentComments =
+          store.state.postComments[_currentPost.pid ?? 0] ?? [];
+      store.dispatch(
+        SetComments(_currentPost.pid ?? 0, [tempComment, ...currentComments]),
       );
 
       setState(() {
-        _comments.insert(
-          0,
-          Comment(
-            id: 0,
-            userId: userInfo.uid,
-            postId: _currentPost.pid ?? 0,
-            content: _commentController.text,
-            createdAt: DateTime.now(),
-            avatar: userInfo.avatar,
-            nickname: userInfo.nickname ?? userInfo.name,
-            name: userInfo.name,
-          ),
-        );
         _currentPost = Post(
           pid: _currentPost.pid,
           uid: _currentPost.uid,
@@ -232,8 +220,46 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
         _offset += 1;
         _isLoadingComments = false;
       });
+
+      await _commentService.addComment(
+        userId: userInfo.uid,
+        postId: _currentPost.pid ?? 0,
+        content: tempComment.content,
+      );
+
+      await _commentService.updatePostCommentCount(
+        _currentPost.pid ?? 0,
+        increment: true,
+      );
+
+      await _fetchComments();
     } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi khi thêm bình luận: $e')));
+      final currentComments =
+          store.state.postComments[_currentPost.pid ?? 0] ?? [];
+      store.dispatch(
+        SetComments(
+          _currentPost.pid ?? 0,
+          currentComments.where((c) => c.id != 0).toList(),
+        ),
+      );
       setState(() {
+        _currentPost = Post(
+          pid: _currentPost.pid,
+          uid: _currentPost.uid,
+          pcontent: _currentPost.pcontent,
+          pimage: _currentPost.pimage,
+          phashtag: _currentPost.phashtag,
+          plike: _currentPost.plike,
+          pcomment: (_currentPost.pcomment ?? 1) - 1,
+          psave: _currentPost.psave,
+          createAt: _currentPost.createAt,
+          avatar: _currentPost.avatar,
+          nickname: _currentPost.nickname,
+        );
+        _offset -= 1;
         _isLoadingComments = false;
       });
     }
@@ -273,7 +299,6 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
       );
 
       setState(() {
-        _comments.removeAt(index);
         _currentPost = Post(
           pid: _currentPost.pid,
           uid: _currentPost.uid,
@@ -291,6 +316,7 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
         _isLoadingComments = false;
       });
 
+      await _fetchComments();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Bình luận đã được xóa")));
@@ -329,6 +355,7 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
       converter: (store) => store.state,
       builder: (context, state) {
         final userInfo = state.userInfo;
+        final comments = state.postComments[_currentPost.pid ?? 0] ?? [];
 
         return Scaffold(
           appBar: AppBar(
@@ -347,8 +374,8 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
             centerTitle: true,
           ),
           body:
-              state.isLoading
-                  ? const Center(child: CircularProgressIndicator())
+              state.isLoading && comments.isEmpty
+                  ? const LoadingScreen()
                   : Column(
                     children: [
                       Expanded(
@@ -535,12 +562,11 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                                       ),
                                     ),
                                     const SizedBox(height: 8),
-                                    if (_comments.isEmpty &&
-                                        !_isLoadingComments)
+                                    if (comments.isEmpty && !_isLoadingComments)
                                       const Center(
                                         child: Text("Chưa có bình luận nào."),
                                       ),
-                                    ..._comments.asMap().entries.map((entry) {
+                                    ...comments.asMap().entries.map((entry) {
                                       final index = entry.key;
                                       final comment = entry.value;
                                       return CardComment(
@@ -556,6 +582,8 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                                             locale: 'vi',
                                           ),
                                           'uid': comment.userId.toString(),
+                                          'like_count': comment.likeCount,
+                                          'isLiked': comment.isLiked,
                                         },
                                         canDelete:
                                             _currentUserUid != null &&
@@ -570,6 +598,11 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                                               comment.id,
                                               comment.content,
                                               index,
+                                            ),
+                                        onLike:
+                                            () => _toggleLikeComment(
+                                              comment,
+                                              comment.isLiked,
                                             ),
                                       );
                                     }),
@@ -625,24 +658,9 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                                   ),
                                   filled: true,
                                   fillColor: Colors.grey[200],
-                                  // Thêm prefix nếu đang chỉnh sửa
-                                  prefixIcon:
-                                      _isEditingComment
-                                          ? const Padding(
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                            ),
-                                            child: Icon(
-                                              Icons.edit,
-                                              color: AppColors.primary,
-                                              size: 20,
-                                            ),
-                                          )
-                                          : null,
                                 ),
                               ),
                             ),
-                            // Nút hủy chỉnh sửa (chỉ hiển thị khi đang chỉnh sửa)
                             if (_isEditingComment)
                               IconButton(
                                 icon: const Icon(
@@ -651,7 +669,6 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                                 ),
                                 onPressed: _cancelEditing,
                               ),
-
                             IconButton(
                               icon: const Icon(
                                 Icons.image,
@@ -743,7 +760,9 @@ class FunctionButton extends StatelessWidget {
                 ),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Save functionality here")),
+                    const SnackBar(
+                      content: Text("Save functionality functionality here"),
+                    ),
                   );
                 },
               ),

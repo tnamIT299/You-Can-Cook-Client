@@ -6,7 +6,6 @@ class CommentService {
 
   CommentService(this.supabaseClient);
 
-  // Thêm bình luận mới
   Future<void> addComment({
     required int userId,
     required int postId,
@@ -24,16 +23,19 @@ class CommentService {
     }
   }
 
-  // Xóa bình luận
   Future<void> deleteComment(int commentId) async {
     try {
+      await supabaseClient
+          .from('comment_likes')
+          .delete()
+          .eq('comment_id', commentId);
+
       await supabaseClient.from('comments').delete().eq('id', commentId);
     } catch (e) {
       throw Exception('Failed to delete comment: $e');
     }
   }
 
-  // Cập nhật bình luận
   Future<Comment> updateComment(int commentId, String newContent) async {
     try {
       final response =
@@ -43,36 +45,67 @@ class CommentService {
               .eq('id', commentId)
               .select('*, users(name, nickname, avatar)')
               .single();
-
       return Comment.fromMap(response);
     } catch (e) {
-      print(e);
       throw Exception('Lỗi khi cập nhật bình luận: $e');
     }
   }
 
-  // Lấy danh sách bình luận cho một bài đăng
+  // Sửa phần này trong CommentService.dart
   Future<List<Comment>> getCommentsByPostId(
     int postId, {
     int limit = 8,
     int offset = 0,
+    int? currentUserId,
   }) async {
     try {
-      final response = await supabaseClient
-          .from('comments')
-          .select('*, users!uid(avatar, nickname, name, uid)')
-          .eq('pid', postId)
-          .order('created_at', ascending: false)
-          .range(offset, offset + limit - 1);
-      return List<Comment>.from(
-        response.map((comment) => Comment.fromMap(comment)),
-      );
+      // Nếu đã đăng nhập, lấy cả trạng thái thích
+      if (currentUserId != null && currentUserId > 0) {
+        final response = await supabaseClient
+            .from('comments')
+            .select('''
+          *,
+          users!uid(avatar, nickname, name, uid),
+          like_count:comment_likes(count),
+          user_likes:comment_likes!left(id, user_id).eq(user_id, $currentUserId)
+        ''')
+            .eq('pid', postId)
+            .order('created_at', ascending: false)
+            .range(offset, offset + limit - 1);
+
+        return List<Comment>.from(
+          response.map((comment) {
+            final likeCount =
+                (comment['like_count'] as List<dynamic>?)?.isNotEmpty == true
+                    ? (comment['like_count'][0]['count'] as int?) ?? 0
+                    : 0;
+            final userLikes = comment['user_likes'] as List<dynamic>?;
+            bool isLiked = false;
+
+            if (userLikes != null && userLikes.isNotEmpty) {
+              for (var like in userLikes) {
+                if (like['user_id'] == currentUserId) {
+                  isLiked = true;
+                  break;
+                }
+              }
+            }
+            return Comment.fromMap({
+              ...comment,
+              'like_count': likeCount,
+              'is_liked': isLiked,
+            });
+          }),
+        );
+      } else {}
     } catch (e) {
+      print('Error fetching comments: $e');
       throw Exception('Failed to fetch comments: $e');
     }
+    // Ensure a return or throw statement at the end
+    throw Exception('Unexpected error: No comments fetched.');
   }
 
-  // Cập nhật số lượng bình luận trong bảng posts
   Future<void> updatePostCommentCount(
     int postId, {
     required bool increment,
@@ -92,6 +125,74 @@ class CommentService {
           .eq('pid', postId);
     } catch (e) {
       throw Exception('Failed to update comment count: $e');
+    }
+  }
+
+  // Phương thức thích bình luận
+  Future<int> likeComment(int commentId, int userId) async {
+    try {
+      // Kiểm tra xem đã thích chưa
+      final existingLike = await supabaseClient
+          .from('comment_likes')
+          .select()
+          .eq('comment_id', commentId)
+          .eq('user_id', userId);
+
+      // Nếu chưa thích, thêm vào bảng comment_likes
+      if (existingLike.isEmpty) {
+        await supabaseClient.from('comment_likes').insert({
+          'comment_id': commentId,
+          'user_id': userId,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      }
+
+      // Đếm lại số lượng like chính xác
+      final countResult = await supabaseClient
+          .from('comment_likes')
+          .select('count')
+          .eq('comment_id', commentId);
+
+      final int actualCount = countResult[0]['count'];
+
+      // Cập nhật like_count trong bảng comments
+      await supabaseClient
+          .from('comments')
+          .update({'like_count': actualCount})
+          .eq('id', commentId);
+
+      return actualCount;
+    } catch (e) {
+      throw Exception('Failed to like comment: $e');
+    }
+  }
+
+  // Phương thức bỏ thích bình luận
+  Future<int> unlikeComment(int commentId, int userId) async {
+    try {
+      await supabaseClient
+          .from('comment_likes')
+          .delete()
+          .eq('comment_id', commentId)
+          .eq('user_id', userId);
+
+      // Đếm lại số lượng like chính xác
+      final countResult = await supabaseClient
+          .from('comment_likes')
+          .select('count')
+          .eq('comment_id', commentId);
+
+      final int actualCount = countResult[0]['count'] ?? 0;
+
+      // Cập nhật like_count trong bảng comments
+      await supabaseClient
+          .from('comments')
+          .update({'like_count': actualCount})
+          .eq('id', commentId);
+
+      return actualCount;
+    } catch (e) {
+      throw Exception('Failed to unlike comment: $e');
     }
   }
 }
