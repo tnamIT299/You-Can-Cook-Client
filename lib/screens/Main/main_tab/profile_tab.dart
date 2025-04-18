@@ -97,7 +97,11 @@ class _ProfileTabState extends State<ProfileTab>
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SettingsScreen()),
+                MaterialPageRoute(
+                  builder:
+                      (context) =>
+                          SettingsScreen(userId: widget.userId.toString()),
+                ),
               );
             },
           ),
@@ -338,7 +342,53 @@ class _ProfileTabState extends State<ProfileTab>
                             ),
                         state.userPhotos.isEmpty
                             ? const Center(child: Text("Chưa có ảnh nào"))
-                            : CardPhotoProfile(photos: state.userPhotos),
+                            : CardPhotoProfile(
+                              photos: state.userPhotos,
+                              // Thêm tham số isOwnProfile dựa trên điều kiện kiểm tra
+                              isOwnProfile:
+                                  currentUserUid != null &&
+                                  currentUserUid == widget.userId,
+                              onDeletePhoto: (photoUrl) async {
+                                try {
+                                  // Kiểm tra lại một lần nữa trước khi thực hiện xóa
+                                  if (currentUserUid != null &&
+                                      currentUserUid == widget.userId) {
+                                    // Hiển thị loading indicator
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder:
+                                          (context) => const Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                    );
+
+                                    // Gọi service để xóa ảnh từ Supabase Storage
+                                    final userService = UserService();
+                                    await userService.deleteUserPhoto(photoUrl);
+
+                                    // Cập nhật Redux store
+                                    final store = StoreProvider.of<AppState>(
+                                      context,
+                                      listen: false,
+                                    );
+                                    store.dispatch(DeleteUserPhoto(photoUrl));
+                                    // Đóng loading indicator
+                                    Navigator.pop(context);
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Bạn không có quyền xóa ảnh này',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  throw Exception("Lỗi khi xóa ảnh: $e");
+                                }
+                              },
+                            ),
                         userInfo.badges == null || userInfo.badges.isEmpty
                             ? const Center(child: Text("Chưa có huy hiệu nào"))
                             : CardBadgesTab(

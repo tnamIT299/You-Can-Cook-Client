@@ -64,6 +64,53 @@ class UserService {
     return publicUrl;
   }
 
+  Future<void> deleteUserPhoto(String photoUrl) async {
+    try {
+      // Phân tích URL để tách bucket và path
+      final Uri uri = Uri.parse(photoUrl);
+      final pathSegments = uri.pathSegments;
+      final publicIndex = pathSegments.indexOf('public');
+
+      if (publicIndex >= 0 && publicIndex + 1 < pathSegments.length) {
+        // Bucket name là phần sau 'public'
+        final bucketName = pathSegments[publicIndex + 1];
+
+        // Path là phần còn lại sau bucket name
+        final path = pathSegments.sublist(publicIndex + 2).join('/');
+
+        // Xóa file từ storage
+        await _supabase.storage.from(bucketName).remove([path]);
+
+        return;
+      } else {
+        // Xử lý URLs từ các nguồn khác
+        final String basePath = _supabase.storage.url;
+        if (!photoUrl.startsWith(basePath)) {
+          throw Exception('URL is not from Supabase storage');
+        }
+
+        // Phân tích URL
+        String path = photoUrl.substring(basePath.length);
+        if (path.startsWith('/')) {
+          path = path.substring(1);
+        }
+
+        // Tách bucket và path
+        final parts = path.split('/');
+        if (parts.length < 2) {
+          throw Exception('Invalid storage URL format');
+        }
+
+        final bucketName = parts[0];
+        final filePath = parts.sublist(1).join('/');
+        // Xóa file từ Storage
+        await _supabase.storage.from(bucketName).remove([filePath]);
+      }
+    } catch (e) {
+      throw Exception('Failed to delete photo: $e');
+    }
+  }
+
   // Lấy danh sách tất cả người dùng
   Future<List<userModel.User>> getAllUsers() async {
     final response = await _supabase.from('users').select();

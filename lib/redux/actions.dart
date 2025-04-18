@@ -61,3 +61,9 @@ class SetProfileUserInfo {
   final dynamic userInfo;
   SetProfileUserInfo(this.userInfo);
 }
+
+class DeleteUserPhoto {
+  final String photoUrl;
+
+  DeleteUserPhoto(this.photoUrl);
+}

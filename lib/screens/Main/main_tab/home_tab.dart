@@ -119,7 +119,10 @@ class _HomeTabState extends State<HomeTab> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => LoyaltyPointsScreen(),
+                    builder:
+                        (context) => LoyaltyPointsScreen(
+                          userId: _currentUserUid?.toString() ?? '',
+                        ),
                   ),
                 );
               },
@@ -131,16 +134,6 @@ class _HomeTabState extends State<HomeTab> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => BadgeScreen()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Cài đặt'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SettingsScreen()),
                 );
               },
             ),

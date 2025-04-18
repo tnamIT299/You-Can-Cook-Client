@@ -8,7 +8,8 @@ import 'package:you_can_cook/screens/Main/sub_screens/follow-screen.dart';
 import 'package:you_can_cook/services/UserService.dart' as userService;
 
 class SettingsScreen extends StatelessWidget {
-  SettingsScreen({super.key});
+  SettingsScreen({super.key, required this.userId});
+  final String userId; // ID người dùng hiện tại
 
   // Dữ liệu giả cho các mục cài đặt
   final List<Map<String, dynamic>> settingsItems = [
@@ -158,7 +159,8 @@ class SettingsScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => LoyaltyPointsScreen(),
+                          builder:
+                              (context) => LoyaltyPointsScreen(userId: userId),
                         ),
                       );
                     }

@@ -58,6 +58,10 @@ AppState appReducer(AppState state, dynamic action) {
     return state.copyWith(userPosts: action.posts, isLoading: false);
   } else if (action is SetUserPhotos) {
     return state.copyWith(userPhotos: action.photos, isLoading: false);
+  } else if (action is DeleteUserPhoto) {
+    return state.copyWith(
+      userPhotos: List.from(state.userPhotos)..remove(action.photoUrl),
+    );
   }
   return state;
 }

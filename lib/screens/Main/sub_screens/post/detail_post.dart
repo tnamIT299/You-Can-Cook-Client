@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:you_can_cook/models/Post.dart';
@@ -14,6 +15,7 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:you_can_cook/services/CommentService.dart';
 import 'package:you_can_cook/services/UserService.dart';
 import 'package:you_can_cook/db/db.dart' as db;
+import 'package:you_can_cook/helper/pick_Image.dart';
 
 void registerTimeagoMessages() {
   timeago.setLocaleMessages('vi', timeago.ViMessages());
@@ -30,6 +32,7 @@ class DetailPostScreen extends StatefulWidget {
 }
 
 class _DetailPostScreenState extends State<DetailPostScreen> {
+  List<File> selectedImages = [];
   int _currentImageIndex = 0;
   final TextEditingController _commentController = TextEditingController();
   final CommentService _commentService = CommentService(db.supabaseClient);
@@ -87,6 +90,15 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
     if (uid != null) {
       setState(() {
         _currentUserUid = uid;
+      });
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile = await ImagePickerUtil.pickImage();
+    if (pickedFile != null) {
+      setState(() {
+        selectedImages.add(File(pickedFile));
       });
     }
   }
@@ -639,7 +651,21 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                                 ),
                                 onPressed: _cancelEditing,
                               ),
-                            // Nút gửi/lưu
+
+                            IconButton(
+                              icon: const Icon(
+                                Icons.image,
+                                color: Colors.green,
+                              ),
+                              onPressed: _pickImage,
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.emoji_emotions,
+                                color: Colors.blue,
+                              ),
+                              onPressed: () {},
+                            ),
                             IconButton(
                               icon: Icon(
                                 _isEditingComment ? Icons.check : Icons.send,
@@ -703,11 +729,7 @@ class FunctionButton extends StatelessWidget {
             children: [
               IconButton(
                 icon: const Icon(Icons.comment, color: AppColors.primary),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Comment functionality here")),
-                  );
-                },
+                onPressed: () {},
               ),
               Text("${post.pcomment ?? 0}"),
             ],

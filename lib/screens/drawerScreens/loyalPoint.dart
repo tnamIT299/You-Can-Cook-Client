@@ -3,7 +3,8 @@ import 'package:you_can_cook/screens/drawerScreens/badgeScreen.dart';
 import 'package:you_can_cook/services/UserService.dart';
 
 class LoyaltyPointsScreen extends StatefulWidget {
-  const LoyaltyPointsScreen({super.key});
+  const LoyaltyPointsScreen({super.key, required this.userId});
+  final String userId; // ID người dùng
 
   @override
   _LoyaltyPointsScreenState createState() => _LoyaltyPointsScreenState();
@@ -23,10 +24,9 @@ class _LoyaltyPointsScreenState extends State<LoyaltyPointsScreen> {
 
   Future<void> _fetchUserData() async {
     try {
-      final userId = 1;
-      final user = await _userService.getUserInfoById(userId);
+      final user = await _userService.getUserInfoById(int.parse(widget.userId));
       setState(() {
-        userName = user?.nickname ?? user?.name ?? "Không rõ";
+        userName = user?.nickname ?? user?.name ?? "Người dùng ẩn danh";
         userPoints = user?.totalPoint ?? 0;
         isLoading = false;
       });
@@ -88,7 +88,10 @@ class _LoyaltyPointsScreenState extends State<LoyaltyPointsScreen> {
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
+                overflow: TextOverflow.ellipsis,
               ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
             const SizedBox(height: 8),
             // Số điểm
