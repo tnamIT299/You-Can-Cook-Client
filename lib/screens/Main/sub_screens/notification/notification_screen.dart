@@ -7,6 +7,7 @@ import 'package:you_can_cook/models/Post.dart';
 import 'dart:convert';
 import 'package:you_can_cook/widgets/loading_screen.dart';
 import 'package:you_can_cook/models/Notification.dart';
+import 'package:you_can_cook/screens/Main/main_tab/profile_tab.dart';
 
 class NotificationsScreen extends StatefulWidget {
   final int userId; // uid của người dùng
@@ -172,6 +173,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             return;
                           }
                         }
+                        if (notification['type'] == 'follow') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => ProfileTab(
+                                    userId: notification['sender_uid'],
+                                  ),
+                            ),
+                          );
+                        }
+
                         if (notification['pid'] != null) {
                           Navigator.push(
                             context,
