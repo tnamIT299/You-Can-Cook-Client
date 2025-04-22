@@ -166,4 +166,21 @@ class Post {
         name.hashCode ^
         avatar.hashCode;
   }
+
+  static List<String> _parseStringList(String value) {
+    if (value.isEmpty) return [];
+    try {
+      final decoded = json.decode(value);
+      if (decoded is List) {
+        return List<String>.from(decoded);
+      }
+    } catch (_) {
+      return value
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+    }
+    return [value];
+  }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:you_can_cook/services/PostService.dart';
 import 'package:you_can_cook/services/UserService.dart';
+import 'package:you_can_cook/services/NotificationService.dart';
 import 'package:you_can_cook/widgets/card_post.dart';
 import 'package:you_can_cook/screens/Main/sub_screens/settting.dart';
 import 'package:you_can_cook/screens/Main/sub_screens/post/create_post.dart';
@@ -12,6 +13,7 @@ import 'package:you_can_cook/models/Post.dart';
 import 'package:you_can_cook/models/User.dart' as userModel;
 import 'package:you_can_cook/widgets/loading_screen.dart';
 import 'package:you_can_cook/screens/drawerScreens/badgeScreen.dart';
+import 'package:you_can_cook/screens/Main/sub_screens/notification/notification_screen.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -22,6 +24,9 @@ class HomeTab extends StatefulWidget {
 class _HomeTabState extends State<HomeTab> {
   final PostService _postService = PostService(db.supabaseClient);
   final UserService _userService = UserService();
+  final NotificationService _notificationService = NotificationService(
+    db.supabaseClient,
+  );
 
   List<Post> _posts = [];
   userModel.User? _currentUser;
@@ -190,11 +195,56 @@ class _HomeTabState extends State<HomeTab> {
                                   );
                                 },
                               ),
-                              IconButton(
-                                iconSize: 30,
-                                color: Colors.white,
-                                icon: const Icon(Icons.notifications),
-                                onPressed: () {},
+                              StreamBuilder<int>(
+                                stream:
+                                    _currentUserUid != null
+                                        ? _notificationService
+                                            .listenToUnreadNotifications(
+                                              _currentUserUid!,
+                                            )
+                                        : Stream.value(0),
+                                initialData: 0,
+                                builder: (context, snapshot) {
+                                  final unreadCount = snapshot.data ?? 0;
+                                  return Stack(
+                                    children: [
+                                      IconButton(
+                                        iconSize: 30,
+                                        color: Colors.white,
+                                        icon: const Icon(Icons.notifications),
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                      NotificationsScreen(
+                                                        userId:
+                                                            _currentUserUid ??
+                                                            0,
+                                                        supabaseClient:
+                                                            db.supabaseClient,
+                                                      ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      if (unreadCount > 0)
+                                        Positioned(
+                                          right: 8,
+                                          top: 8,
+                                          child: Container(
+                                            width: 10,
+                                            height: 10,
+                                            decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Colors.red,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  );
+                                },
                               ),
                             ],
                           ),

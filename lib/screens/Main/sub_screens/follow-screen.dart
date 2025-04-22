@@ -137,6 +137,16 @@ class _FollowScreenState extends State<FollowScreen> {
                           itemBuilder: (context, index) {
                             final user = _followersList[index];
                             return ListTile(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) =>
+                                            ProfileTab(userId: user['uid']),
+                                  ),
+                                );
+                              },
                               leading: CircleAvatar(
                                 radius: 20,
                                 backgroundImage:

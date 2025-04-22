@@ -12,12 +12,48 @@ class CommentService {
     required String content,
   }) async {
     try {
-      await supabaseClient.from('comments').insert({
-        'uid': userId,
-        'pid': postId,
-        'content': content,
-        'created_at': DateTime.now().toIso8601String(),
-      });
+      // Thêm bình luận vào bảng comments và lấy thông tin bình luận vừa tạo
+      final commentResponse =
+          await supabaseClient
+              .from('comments')
+              .insert({
+                'uid': userId,
+                'pid': postId,
+                'content': content,
+                'created_at': DateTime.now().toIso8601String(),
+              })
+              .select()
+              .single();
+
+      // Lấy thông tin bài viết để tìm chủ bài viết
+      final postResponse =
+          await supabaseClient
+              .from('posts')
+              .select('uid')
+              .eq('pid', postId)
+              .single();
+
+      // Lấy thông tin người bình luận
+      final actorResponse =
+          await supabaseClient
+              .from('users')
+              .select('name, nickname')
+              .eq('uid', userId)
+              .single();
+
+      // Tạo thông báo cho chủ bài viết nếu người bình luận không phải là họ
+      if (postResponse['uid'] != userId) {
+        await supabaseClient.from('notifications').insert({
+          'receiver_uid': postResponse['uid'],
+          'sender_uid': userId,
+          'type': 'comment',
+          'pid': postId,
+          'content':
+              '${actorResponse['nickname'] ?? actorResponse['name']} đã bình luận trên bài viết của bạn:  "${content.length > 50 ? '${content.substring(0, 50)}...' : content}"',
+          'is_read': false,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      }
     } catch (e) {
       throw Exception('Failed to add comment: $e');
     }
