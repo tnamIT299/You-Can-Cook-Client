@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:you_can_cook/models/Post.dart';
 import 'package:you_can_cook/services/FollowerService.dart';
+import 'package:you_can_cook/services/LikeService.dart';
 import 'package:you_can_cook/utils/color.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:you_can_cook/screens/Main/main_tab/profile_tab.dart';
@@ -29,13 +30,16 @@ class CardPost extends StatefulWidget {
 class _CardPostState extends State<CardPost> {
   late final PostService _postService;
   late final FollowerService _followerService;
+  late final LikeService _likeService;
   int _currentImageIndex = 0;
   bool _isExpanded = false;
+
   @override
   void initState() {
     super.initState();
     _postService = PostService(supabaseClient);
     _followerService = FollowerService();
+    _likeService = LikeService();
     timeago.setLocaleMessages('vi', timeago.ViMessages());
   }
 
@@ -55,8 +59,8 @@ class _CardPostState extends State<CardPost> {
       builder:
           (context) => ReportDialog(
             reporterUid: widget.currentUserUid!,
-            reportedUid: widget.post.uid.toString(), // UID của người bị báo cáo
-            pid: widget.post.pid.toString(), // ID của bài post (nếu có)
+            reportedUid: widget.post.uid.toString(),
+            pid: widget.post.pid.toString(),
           ),
     );
 
@@ -74,7 +78,7 @@ class _CardPostState extends State<CardPost> {
     final List<String>? images = widget.post.pimage;
     final String relativeTime = timeago.format(
       widget.post.createAt ?? DateTime.now(),
-      locale: 'vi', // Sử dụng ngôn ngữ Tiếng Việt
+      locale: 'vi',
     );
     return Card(
       color: Colors.white,
@@ -124,7 +128,7 @@ class _CardPostState extends State<CardPost> {
                                   ),
                                   title: const Text("Xem bài viết"),
                                   onTap: () {
-                                    Navigator.pop(context); // Đóng modal
+                                    Navigator.pop(context);
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -145,7 +149,7 @@ class _CardPostState extends State<CardPost> {
                                   ),
                                   title: const Text("Chỉnh sửa bài viết"),
                                   onTap: () {
-                                    Navigator.pop(context); // Đóng modal
+                                    Navigator.pop(context);
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -169,10 +173,10 @@ class _CardPostState extends State<CardPost> {
                                       "Xóa bài viết",
                                       "Bạn có chắc chắn muốn xóa bài viết này không?",
                                       () async {
-                                        _postService.deletePost(
+                                        await _postService.deletePost(
                                           widget.post.pid!,
                                         );
-                                        Navigator.pop(context); // Đóng modal
+                                        Navigator.pop(context);
                                         ScaffoldMessenger.of(
                                           context,
                                         ).showSnackBar(
@@ -184,8 +188,8 @@ class _CardPostState extends State<CardPost> {
                                         );
                                       },
                                       () {
-                                        Navigator.pop(context); // Đóng modal
-                                      }, // Add the missing argument (e.g., an empty callback)
+                                        Navigator.pop(context);
+                                      },
                                     );
                                   },
                                 ),
@@ -216,7 +220,7 @@ class _CardPostState extends State<CardPost> {
                                   ),
                                   title: const Text("Xem bài viết"),
                                   onTap: () {
-                                    Navigator.pop(context); // Đóng modal
+                                    Navigator.pop(context);
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -246,11 +250,11 @@ class _CardPostState extends State<CardPost> {
                                       "Huỷ theo dõi",
                                       "Bạn có chắc chắn muốn huỷ theo dõi ${widget.post.nickname} không?",
                                       () async {
-                                        _followerService.unfollow(
+                                        await _followerService.unfollow(
                                           int.parse(widget.currentUserUid!),
                                           widget.post.uid,
                                         );
-                                        Navigator.pop(context); // Đóng modal
+                                        Navigator.pop(context);
                                         ScaffoldMessenger.of(
                                           context,
                                         ).showSnackBar(
@@ -260,8 +264,8 @@ class _CardPostState extends State<CardPost> {
                                         );
                                       },
                                       () {
-                                        Navigator.pop(context); // Đóng modal
-                                      }, // Add the missing argument (e.g., an empty callback)
+                                        Navigator.pop(context);
+                                      },
                                     );
                                   },
                                 ),
@@ -272,7 +276,7 @@ class _CardPostState extends State<CardPost> {
                                   ),
                                   title: const Text("Báo cáo người dùng "),
                                   onTap: () {
-                                    Navigator.pop(context); // Đóng modal
+                                    Navigator.pop(context);
                                     _showReportDialog();
                                   },
                                 ),
@@ -365,7 +369,7 @@ class _CardPostState extends State<CardPost> {
                     );
                   },
                 ),
-          FunctionButton(widget: widget),
+          FunctionButton(widget: widget, likeService: _likeService),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Text(
@@ -380,20 +384,18 @@ class _CardPostState extends State<CardPost> {
               children: [
                 Text(
                   widget.post.pcontent ?? '',
-                  maxLines:
-                      _isExpanded ? null : 1, // Hiển thị đầy đủ nếu mở rộng
+                  maxLines: _isExpanded ? null : 1,
                   overflow:
                       _isExpanded
                           ? TextOverflow.visible
                           : TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 14, color: Colors.black87),
                 ),
-                if ((widget.post.pcontent ?? '').length >
-                    100) // Kiểm tra độ dài nội dung
+                if ((widget.post.pcontent ?? '').length > 100)
                   GestureDetector(
                     onTap: () {
                       setState(() {
-                        _isExpanded = !_isExpanded; // Đổi trạng thái khi nhấn
+                        _isExpanded = !_isExpanded;
                       });
                     },
                     child: Text(
@@ -408,7 +410,6 @@ class _CardPostState extends State<CardPost> {
               ],
             ),
           ),
-
           if (widget.post.phashtag != null && widget.post.phashtag!.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -431,80 +432,140 @@ class _CardPostState extends State<CardPost> {
   }
 }
 
-class FunctionButton extends StatelessWidget {
-  const FunctionButton({super.key, required this.widget});
+class FunctionButton extends StatefulWidget {
+  const FunctionButton({
+    super.key,
+    required this.widget,
+    required this.likeService,
+  });
 
   final CardPost widget;
+  final LikeService likeService;
+
+  @override
+  _FunctionButtonState createState() => _FunctionButtonState();
+}
+
+class _FunctionButtonState extends State<FunctionButton> {
+  bool _isLiked = false;
+  int _likeCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _likeCount = widget.widget.post.plike ?? 0;
+    if (widget.widget.currentUserUid != null) {
+      _checkLikeStatus();
+    }
+  }
+
+  Future<void> _checkLikeStatus() async {
+    final isLiked = await widget.likeService.hasLiked(
+      int.parse(widget.widget.currentUserUid!),
+      widget.widget.post.pid!,
+    );
+    setState(() {
+      _isLiked = isLiked;
+    });
+  }
+
+  Future<void> _toggleLike() async {
+    if (widget.widget.currentUserUid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng đăng nhập để thích bài viết')),
+      );
+      return;
+    }
+
+    try {
+      await widget.likeService.toggleLike(
+        int.parse(widget.widget.currentUserUid!),
+        widget.widget.post.pid!,
+        widget.widget.post.uid, // postOwnerId
+        _isLiked,
+      );
+      setState(() {
+        _isLiked = !_isLiked;
+        _likeCount += _isLiked ? 1 : -1;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi khi thích bài viết: $e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Row(
+    return StreamBuilder<int>(
+      stream: widget.likeService.listenToLikeCount(widget.widget.post.pid!),
+      initialData: _likeCount,
+      builder: (context, snapshot) {
+        final likeCount = snapshot.data ?? _likeCount;
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              IconButton(
-                icon: const Icon(
-                  Icons.favorite_border,
-                  color: AppColors.primary,
-                ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Like functionality here")),
-                  );
-                },
-              ),
-              Text(
-                "${widget.post.plike ?? 0}",
-                style: const TextStyle(fontSize: 14),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              IconButton(
-                color: AppColors.primary,
-                icon: const Icon(Icons.comment),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => DetailPostScreen(
-                            post: widget.post,
-                            currentUserUid: widget.currentUserUid,
-                          ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      _isLiked ? Icons.favorite : Icons.favorite_border,
+                      color: _isLiked ? Colors.red : AppColors.primary,
                     ),
-                  );
-                },
+                    onPressed: _toggleLike,
+                  ),
+                  Text("$likeCount", style: const TextStyle(fontSize: 14)),
+                ],
               ),
-              Text(
-                "${widget.post.pcomment ?? 0}",
-                style: const TextStyle(fontSize: 14),
+              Row(
+                children: [
+                  IconButton(
+                    color: AppColors.primary,
+                    icon: const Icon(Icons.comment),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => DetailPostScreen(
+                                post: widget.widget.post,
+                                currentUserUid: widget.widget.currentUserUid,
+                              ),
+                        ),
+                      );
+                    },
+                  ),
+                  Text(
+                    "${widget.widget.post.pcomment ?? 0}",
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    color: AppColors.primary,
+                    icon: const Icon(Icons.bookmark_border),
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Save functionality here"),
+                        ),
+                      );
+                    },
+                  ),
+                  Text(
+                    "${widget.widget.post.psave ?? 0}",
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ],
               ),
             ],
           ),
-          Row(
-            children: [
-              IconButton(
-                color: AppColors.primary,
-                icon: const Icon(Icons.bookmark_border),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Save functionality here")),
-                  );
-                },
-              ),
-              Text(
-                "${widget.post.psave ?? 0}",
-                style: const TextStyle(fontSize: 14),
-              ),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

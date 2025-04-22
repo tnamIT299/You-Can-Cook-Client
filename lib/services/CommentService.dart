@@ -183,6 +183,36 @@ class CommentService {
         });
       }
 
+      // Lấy thông tin chủ bình luận
+      final commentResponse =
+          await supabaseClient
+              .from('comments')
+              .select('uid, pid')
+              .eq('id', commentId)
+              .single();
+
+      // Lấy thông tin người thích
+      final actorResponse =
+          await supabaseClient
+              .from('users')
+              .select('name, nickname')
+              .eq('uid', userId)
+              .single();
+
+      // Tạo thông báo nếu người thích không phải chủ bình luận
+      if (commentResponse['uid'] != userId) {
+        await supabaseClient.from('notifications').insert({
+          'receiver_uid': commentResponse['uid'],
+          'sender_uid': userId,
+          'type': 'comment_like',
+          'pid': commentResponse['pid'],
+          'content':
+              '${actorResponse['nickname'] ?? actorResponse['name']} đã thích bình luận của bạn.',
+          'is_read': false,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      }
+
       // Đếm lại số lượng like chính xác
       final countResult = await supabaseClient
           .from('comment_likes')

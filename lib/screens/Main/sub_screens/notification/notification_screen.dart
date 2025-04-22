@@ -4,6 +4,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'package:you_can_cook/services/NotificationService.dart';
 import 'package:you_can_cook/screens/Main/sub_screens/post/detail_post.dart';
 import 'package:you_can_cook/models/Post.dart';
+import 'package:you_can_cook/utils/color.dart';
 import 'dart:convert';
 import 'package:you_can_cook/widgets/loading_screen.dart';
 import 'package:you_can_cook/models/Notification.dart';
@@ -118,10 +119,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Thông báo'),
+        backgroundColor: AppColors.primary,
+        automaticallyImplyLeading: false,
+        title: Center(
+          child: const Text(
+            'Thông báo',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Source Sans 3',
+            ),
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.check_circle),
+            icon: const Icon(Icons.check_circle, color: Colors.white),
             onPressed: _markAllAsRead,
           ),
         ],
