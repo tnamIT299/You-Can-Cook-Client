@@ -49,7 +49,7 @@ class CommentService {
           'type': 'comment',
           'pid': postId,
           'content':
-              '${actorResponse['nickname'] ?? actorResponse['name']} đã bình luận trên bài viết của bạn:  "${content.length > 50 ? '${content.substring(0, 50)}...' : content}"',
+              '${actorResponse['nickname'] ?? actorResponse['name']} đã bình luận trên bài viết của bạn: "${content.length > 50 ? '${content.substring(0, 50)}...' : content}"',
           'is_read': false,
           'created_at': DateTime.now().toIso8601String(),
         });

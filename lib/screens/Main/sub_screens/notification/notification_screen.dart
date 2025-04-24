@@ -39,22 +39,27 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _loadNotifications() async {
     try {
-      setState(() {
-        isLoading = true;
-        error = null;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = true;
+          error = null;
+        });
+      }
 
       final result = await notificationService.getNotifications(widget.userId);
-
-      setState(() {
-        notifications = result;
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          notifications = result;
+          isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        error = e.toString();
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          error = e.toString();
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -211,20 +216,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                       pid: notification['pid'],
                                       pcontent:
                                           notification['post']['pcontent'],
-                                      uid: notification['receiver_uid'],
+                                      uid: notification['post']['uid'],
                                       nickname:
-                                          notification['receiver']['nickname']
+                                          notification['post']['post_owner']['nickname']
                                                       ?.isNotEmpty ==
                                                   true
-                                              ? notification['receiver']['nickname']
-                                              : notification['receiver']['name'] ??
+                                              ? notification['post']['post_owner']['nickname']
+                                              : notification['post']['post_owner']['name'] ??
                                                   'Người dùng',
                                       avatar:
-                                          notification['receiver']['avatar']
+                                          notification['post']['post_owner']['avatar']
                                                       ?.isNotEmpty ==
                                                   true
-                                              ? notification['receiver']['avatar']
+                                              ? notification['post']['post_owner']['avatar']
                                               : null,
+                                      name:
+                                          notification['post']['post_owner']['name'],
                                       plike:
                                           notification['post']['plike']
                                               as int? ??

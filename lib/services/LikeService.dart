@@ -1,7 +1,6 @@
-import 'dart:math';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:you_can_cook/db/db.dart';
+import 'package:you_can_cook/models/Like.dart';
 
 class LikeService {
   final SupabaseClient _client = supabaseClient;
@@ -46,11 +45,22 @@ class LikeService {
             .eq('pid', postId);
       } else {
         // Thêm like
-        await _client.from('likes').insert({
-          'uid': userId,
-          'pid': postId,
-          'created_at': DateTime.now().toIso8601String(),
-        });
+        try {
+          await _client.from('likes').insert({
+            'uid': userId,
+            'pid': postId,
+            'created_at': DateTime.now().toIso8601String(),
+          });
+        } catch (e) {
+          if (e.toString().contains('duplicate key value')) {
+            // Like đã tồn tại, bỏ qua lỗi và kiểm tra lại trạng thái
+            if (await hasLiked(userId, postId)) {
+              return; // Like đã tồn tại, không cần thêm thông báo
+            }
+            throw Exception('Failed to insert like: $e');
+          }
+          throw Exception('Failed to insert like: $e');
+        }
 
         // Tăng số lượng like trong bảng posts
         await _client
@@ -135,13 +145,18 @@ class LikeService {
     try {
       final response = await _client
           .from('likes')
-          .select('uid, users!uid(nickname, name, avatar)')
+          .select('id, uid, pid, created_at, users!uid(nickname, name, avatar)')
           .eq('pid', postId);
 
       return response.map((liker) {
         final user = liker['users'] as Map<String, dynamic>;
         return {
-          'uid': liker['uid'],
+          'like': Like(
+            id: liker['id'] as int,
+            uid: liker['uid'] as int,
+            pid: liker['pid'] as int,
+            created_at: DateTime.parse(liker['created_at'] as String),
+          ),
           'nickname':
               user['nickname']?.isNotEmpty == true
                   ? user['nickname']

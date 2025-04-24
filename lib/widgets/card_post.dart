@@ -18,10 +18,16 @@ void registerTimeagoMessages() {
 }
 
 class CardPost extends StatefulWidget {
-  const CardPost({super.key, required this.post, required this.currentUserUid});
+  const CardPost({
+    super.key,
+    required this.post,
+    required this.currentUserUid,
+    this.onLikeToggled,
+  });
 
   final Post post;
   final String? currentUserUid;
+  final void Function(int newLikeCount)? onLikeToggled;
 
   @override
   _CardPostState createState() => _CardPostState();
@@ -139,7 +145,14 @@ class _CardPostState extends State<CardPost> {
                                                   widget.currentUserUid,
                                             ),
                                       ),
-                                    );
+                                    ).then((result) {
+                                      if (result != null &&
+                                          result is Map<String, dynamic>) {
+                                        widget.onLikeToggled?.call(
+                                          result['likeCount'],
+                                        );
+                                      }
+                                    });
                                   },
                                 ),
                                 ListTile(
@@ -231,7 +244,14 @@ class _CardPostState extends State<CardPost> {
                                                   widget.currentUserUid,
                                             ),
                                       ),
-                                    );
+                                    ).then((result) {
+                                      if (result != null &&
+                                          result is Map<String, dynamic>) {
+                                        widget.onLikeToggled?.call(
+                                          result['likeCount'],
+                                        );
+                                      }
+                                    });
                                   },
                                 ),
                                 ListTile(
@@ -369,7 +389,11 @@ class _CardPostState extends State<CardPost> {
                     );
                   },
                 ),
-          FunctionButton(widget: widget, likeService: _likeService),
+          FunctionButton(
+            widget: widget,
+            likeService: _likeService,
+            onLikeToggled: widget.onLikeToggled,
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Text(
@@ -437,10 +461,12 @@ class FunctionButton extends StatefulWidget {
     super.key,
     required this.widget,
     required this.likeService,
+    this.onLikeToggled,
   });
 
   final CardPost widget;
   final LikeService likeService;
+  final void Function(int newLikeCount)? onLikeToggled;
 
   @override
   _FunctionButtonState createState() => _FunctionButtonState();
@@ -464,9 +490,11 @@ class _FunctionButtonState extends State<FunctionButton> {
       int.parse(widget.widget.currentUserUid!),
       widget.widget.post.pid!,
     );
-    setState(() {
-      _isLiked = isLiked;
-    });
+    if (mounted) {
+      setState(() {
+        _isLiked = isLiked;
+      });
+    }
   }
 
   Future<void> _toggleLike() async {
@@ -481,89 +509,126 @@ class _FunctionButtonState extends State<FunctionButton> {
       await widget.likeService.toggleLike(
         int.parse(widget.widget.currentUserUid!),
         widget.widget.post.pid!,
-        widget.widget.post.uid, // postOwnerId
+        widget.widget.post.uid,
         _isLiked,
       );
-      setState(() {
-        _isLiked = !_isLiked;
-        _likeCount += _isLiked ? 1 : -1;
-      });
+      if (mounted) {
+        setState(() {
+          _isLiked = !_isLiked;
+          _likeCount += _isLiked ? 1 : -1;
+        });
+        widget.onLikeToggled?.call(_likeCount);
+      }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Lỗi khi thích bài viết: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi khi thích bài viết: $e')));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<int>(
-      stream: widget.likeService.listenToLikeCount(widget.widget.post.pid!),
-      initialData: _likeCount,
-      builder: (context, snapshot) {
-        final likeCount = snapshot.data ?? _likeCount;
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Row(
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      _isLiked ? Icons.favorite : Icons.favorite_border,
-                      color: _isLiked ? Colors.red : AppColors.primary,
-                    ),
-                    onPressed: _toggleLike,
-                  ),
-                  Text("$likeCount", style: const TextStyle(fontSize: 14)),
-                ],
+      stream:
+          widget.widget.currentUserUid != null
+              ? widget.likeService.listenToLikeStatus(
+                int.parse(widget.widget.currentUserUid!),
+                widget.widget.post.pid!,
+              )
+              : null,
+      initialData: _isLiked ? 1 : 0,
+      builder: (context, likeStatusSnapshot) {
+        final isLiked = likeStatusSnapshot.data == 1;
+        return StreamBuilder<int>(
+          stream: widget.likeService.listenToLikeCount(widget.widget.post.pid!),
+          initialData: _likeCount,
+          builder: (context, snapshot) {
+            final likeCount = snapshot.data ?? _likeCount;
+            return Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 2.0,
+                vertical: 4.0,
               ),
-              Row(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  IconButton(
-                    color: AppColors.primary,
-                    icon: const Icon(Icons.comment),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => DetailPostScreen(
-                                post: widget.widget.post,
-                                currentUserUid: widget.widget.currentUserUid,
-                              ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          isLiked ? Icons.favorite : Icons.favorite_border,
+                          color: isLiked ? Colors.red : AppColors.primary,
                         ),
-                      );
-                    },
+                        onPressed: _toggleLike,
+                      ),
+                      likeCount >= 1000
+                          ? Text(
+                            '${(likeCount / 1000).toStringAsFixed(1)}k',
+                            style: const TextStyle(fontSize: 14),
+                          )
+                          : likeCount >= 0
+                          ? Text(
+                            likeCount.toString(),
+                            style: const TextStyle(fontSize: 14),
+                          )
+                          : const SizedBox.shrink(),
+                    ],
                   ),
-                  Text(
-                    "${widget.widget.post.pcomment ?? 0}",
-                    style: const TextStyle(fontSize: 14),
+                  Row(
+                    children: [
+                      IconButton(
+                        color: AppColors.primary,
+                        icon: const Icon(Icons.comment),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => DetailPostScreen(
+                                    post: widget.widget.post,
+                                    currentUserUid:
+                                        widget.widget.currentUserUid,
+                                  ),
+                            ),
+                          ).then((result) {
+                            if (result != null &&
+                                result is Map<String, dynamic>) {
+                              widget.onLikeToggled?.call(result['likeCount']);
+                            }
+                          });
+                        },
+                      ),
+                      Text(
+                        "${widget.widget.post.pcomment ?? 0}",
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        color: AppColors.primary,
+                        icon: const Icon(Icons.bookmark_border),
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Save functionality here"),
+                            ),
+                          );
+                        },
+                      ),
+                      Text(
+                        "${widget.widget.post.psave ?? 0}",
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ],
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  IconButton(
-                    color: AppColors.primary,
-                    icon: const Icon(Icons.bookmark_border),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Save functionality here"),
-                        ),
-                      );
-                    },
-                  ),
-                  Text(
-                    "${widget.widget.post.psave ?? 0}",
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ],
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );

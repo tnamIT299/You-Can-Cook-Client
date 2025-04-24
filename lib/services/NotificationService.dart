@@ -19,7 +19,7 @@ class NotificationService {
                 id, receiver_uid, sender_uid, type, pid, content, is_read, created_at, updated_at,
                 actor:users!sender_uid(name, nickname, avatar),
                 receiver:users!receiver_uid(name, nickname, avatar),
-                post:posts!pid(uid, pcontent, pimage, createAt, phashtag, plike, pcomment, psave)
+                post:posts!pid(uid, pcontent, pimage, createAt, phashtag, plike, pcomment, psave , post_owner:users!uid(name, nickname, avatar))
                 ''')
           .eq('receiver_uid', userId)
           .order('created_at', ascending: false)

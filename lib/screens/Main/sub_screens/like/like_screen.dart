@@ -85,7 +85,8 @@ class _LikersScreenState extends State<LikersScreen> {
                         context,
                         MaterialPageRoute(
                           builder:
-                              (context) => ProfileTab(userId: liker['uid']),
+                              (context) =>
+                                  ProfileTab(userId: liker['like'].uid),
                         ),
                       );
                     },

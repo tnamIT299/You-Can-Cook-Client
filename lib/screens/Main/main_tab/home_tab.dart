@@ -83,6 +83,32 @@ class _HomeTabState extends State<HomeTab> {
     }
   }
 
+  // Cập nhật trạng thái like của một bài viết cụ thể
+  void _updatePostLike(int postId, int newLikeCount) {
+    setState(() {
+      _posts =
+          _posts.map((post) {
+            if (post.pid == postId) {
+              return Post(
+                pid: post.pid,
+                uid: post.uid,
+                pcontent: post.pcontent,
+                pimage: post.pimage,
+                phashtag: post.phashtag,
+                plike: newLikeCount,
+                pcomment: post.pcomment,
+                psave: post.psave,
+                createAt: post.createAt,
+                avatar: post.avatar,
+                nickname: post.nickname,
+                name: post.name,
+              );
+            }
+            return post;
+          }).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
@@ -192,7 +218,7 @@ class _HomeTabState extends State<HomeTab> {
                                       builder:
                                           (context) => CreateNewPostScreen(),
                                     ),
-                                  );
+                                  ).then((_) => _fetchPosts());
                                 },
                               ),
                               StreamBuilder<int>(
@@ -292,6 +318,9 @@ class _HomeTabState extends State<HomeTab> {
                             child: CardPost(
                               post: post,
                               currentUserUid: _currentUserUid?.toString(),
+                              onLikeToggled:
+                                  (newLikeCount) =>
+                                      _updatePostLike(post.pid!, newLikeCount),
                             ),
                           );
                         },
