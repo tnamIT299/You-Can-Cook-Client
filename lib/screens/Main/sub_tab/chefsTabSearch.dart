@@ -46,9 +46,11 @@ class _ChefsTabSearchState extends State<ChefsTabSearch> {
       });
       _filterChefs();
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Lỗi: $e")));

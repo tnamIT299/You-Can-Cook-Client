@@ -38,8 +38,10 @@ class _RecipesTabSearchState extends State<RecipesTabSearch> {
   Future<void> _fetchInitialData() async {
     try {
       final topPostsResult = await _postService.get5PostMaxLike();
+
       final allPostsResult =
           await _postService.getAllPosts(); // Giả định có hàm này
+
       setState(() {
         topPosts = topPostsResult;
         allPosts = allPostsResult;

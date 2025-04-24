@@ -18,6 +18,7 @@ import 'package:you_can_cook/db/db.dart' as db;
 import 'package:you_can_cook/helper/pick_Image.dart';
 import 'package:you_can_cook/widgets/loading_screen.dart';
 import 'package:you_can_cook/screens/Main/sub_screens/like/like_screen.dart';
+import 'package:giphy_picker/giphy_picker.dart';
 
 void registerTimeagoMessages() {
   timeago.setLocaleMessages('vi', timeago.ViMessages());
@@ -394,6 +395,27 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
           name: _currentPost.name,
         );
       });
+    }
+  }
+
+  Future<void> _pickGIF(BuildContext context) async {
+    try {
+      final gif = await GiphyPicker.pickGif(
+        context: context,
+        apiKey: 'QxBdVtcex9YYfnfZYJkC8BoWNxE6hw7A', // Thay bằng API Key của bạn
+      );
+
+      if (gif != null) {
+        // In ra URL của GIF để kiểm tra, chưa gửi bình luận
+        print('GIF selected: ${gif.url}');
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Đã chọn GIF: ${gif.url}')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi khi chọn GIF: $e')));
     }
   }
 
@@ -829,11 +851,13 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                             // ),
                             IconButton(
                               icon: const Icon(
-                                size: 35.0,
+                                size: 40.0,
                                 Icons.gif,
                                 color: Colors.blue,
                               ),
-                              onPressed: () {},
+                              onPressed: () {
+                                _pickGIF(context);
+                              },
                             ),
                             IconButton(
                               icon: Icon(

@@ -15,6 +15,7 @@ class Post {
   final String? nickname; // Từ bảng users
   final String? name;
   final String? avatar; // Từ bảng users
+  final bool? isWarning;
 
   Post({
     this.pid,
@@ -30,6 +31,7 @@ class Post {
     this.nickname,
     this.name,
     this.avatar,
+    this.isWarning,
   });
 
   Post copyWith({
@@ -46,6 +48,7 @@ class Post {
     String? nickname,
     String? name,
     String? avatar,
+    bool? isWarning,
   }) {
     return Post(
       pid: pid ?? this.pid,
@@ -61,6 +64,7 @@ class Post {
       nickname: nickname ?? this.nickname,
       name: name ?? this.name,
       avatar: avatar ?? this.avatar,
+      isWarning: isWarning ?? this.isWarning,
     );
   }
 
@@ -82,7 +86,7 @@ class Post {
     return Post(
       pid: map['pid'] != null ? map['pid'] as int : null,
       uid: map['uid'] as int,
-      pcontent: map['pcontent'] != null ? map['pcontent'] as String : null,
+      pcontent: map['pcontent']?.toString(),
       pimage:
           map['pimage'] != null
               ? (map['pimage'] is String
@@ -102,15 +106,24 @@ class Post {
       plike: map['plike'] != null ? map['plike'] as int : null,
       pcomment: map['pcomment'] != null ? map['pcomment'] as int : null,
       psave: map['psave'] != null ? map['psave'] as int : null,
-      prange: map['prange'] != null ? map['prange'] as String : null,
+      prange: map['prange']?.toString(),
       createAt:
           map['createAt'] != null
               ? DateTime.parse(map['createAt'] as String)
               : null,
       nickname:
-          map['users'] != null ? map['users']['nickname'] as String : null,
-      name: map['users'] != null ? map['users']['name'] as String : null,
-      avatar: map['users'] != null ? map['users']['avatar'] as String? : null,
+          map['users'] != null && map['users']['nickname'] != null
+              ? map['users']['nickname'].toString()
+              : null,
+      name:
+          map['users'] != null && map['users']['name'] != null
+              ? map['users']['name'].toString()
+              : null,
+      avatar:
+          map['users'] != null && map['users']['avatar'] != null
+              ? map['users']['avatar'].toString()
+              : null,
+      isWarning: map['isWarning'] != null ? map['isWarning'] as bool : null,
     );
   }
 
@@ -128,7 +141,7 @@ class Post {
 
   @override
   String toString() {
-    return 'Post(pid: $pid, uid: $uid, pcontent: $pcontent, pimage: $pimage, phashtag: $phashtag, plike: $plike, pcomment: $pcomment, psave: $psave, prange: $prange, createAt: $createAt, name: $name, nickname: $nickname, avatar: $avatar)';
+    return 'Post(pid: $pid, uid: $uid, pcontent: $pcontent, pimage: $pimage, phashtag: $phashtag, plike: $plike, pcomment: $pcomment, psave: $psave, prange: $prange, createAt: $createAt, name: $name, nickname: $nickname, avatar: $avatar, isWarning: $isWarning)';
   }
 
   @override
@@ -147,7 +160,8 @@ class Post {
         other.createAt == createAt &&
         other.nickname == nickname &&
         other.name == name &&
-        other.avatar == avatar;
+        other.avatar == avatar &&
+        other.isWarning == isWarning;
   }
 
   @override
@@ -164,7 +178,8 @@ class Post {
         createAt.hashCode ^
         nickname.hashCode ^
         name.hashCode ^
-        avatar.hashCode;
+        avatar.hashCode ^
+        isWarning.hashCode;
   }
 
   static List<String> _parseStringList(String value) {
