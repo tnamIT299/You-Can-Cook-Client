@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:you_can_cook/utils/color.dart';
 import 'package:you_can_cook/screens/Main/main_tab/profile_tab.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class CardComment extends StatelessWidget {
   final Map<String, dynamic> comment;
@@ -20,9 +21,9 @@ class CardComment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(comment);
     final bool isLiked = comment['isLiked'] as bool? ?? false;
     final int likeCount = comment['like_count'] as int? ?? 0;
+    final bool isGifComment = comment['gifURL'] != null;
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4.0),
@@ -78,16 +79,27 @@ class CardComment extends StatelessWidget {
                         IconButton(
                           icon: const Icon(Icons.more_vert),
                           onPressed: () {
-                            _showOptionsModal(context);
+                            _showOptionsModal(context, isGifComment);
                           },
                           constraints: const BoxConstraints(minWidth: 40),
                         ),
                     ],
                   ),
-                  Text(
-                    comment['content']!,
-                    style: const TextStyle(fontSize: 14),
-                  ),
+                  if (isGifComment)
+                    CachedNetworkImage(
+                      imageUrl: comment['gifURL']!,
+                      height: 100,
+                      fit: BoxFit.cover,
+                      placeholder:
+                          (context, url) => const CircularProgressIndicator(),
+                      errorWidget:
+                          (context, url, error) => const Icon(Icons.error),
+                    )
+                  else
+                    Text(
+                      comment['content']!,
+                      style: const TextStyle(fontSize: 14),
+                    ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
@@ -139,7 +151,7 @@ class CardComment extends StatelessWidget {
     );
   }
 
-  void _showOptionsModal(BuildContext context) {
+  void _showOptionsModal(BuildContext context, bool isGifComment) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -150,17 +162,18 @@ class CardComment extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                leading: const Icon(Icons.edit, color: AppColors.primary),
-                title: const Text('Chỉnh sửa bình luận'),
-                onTap: () {
-                  Navigator.pop(context);
-                  if (onEdit != null) {
-                    onEdit!();
-                  }
-                },
-              ),
-              const Divider(height: 0),
+              if (!isGifComment)
+                ListTile(
+                  leading: const Icon(Icons.edit, color: AppColors.primary),
+                  title: const Text('Chỉnh sửa bình luận'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    if (onEdit != null) {
+                      onEdit!();
+                    }
+                  },
+                ),
+              if (!isGifComment) const Divider(height: 0),
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),
                 title: const Text(

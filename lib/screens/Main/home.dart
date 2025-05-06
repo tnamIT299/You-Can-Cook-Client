@@ -31,16 +31,17 @@ class _HomeScreenState extends State<HomeScreen> {
         await UserService().getCurrentUserUid(); // Lấy UID từ UserService
     final int userId =
         currentUserUid ?? 0; // Nếu null, đặt giá trị mặc định là 0
-
-    setState(() {
-      _screens = [
-        HomeTab(),
-        const ExploreTab(),
-        const ChatAI_Tab(),
-        const Ranked_Tab(),
-        ProfileTab(userId: userId), // Truyền userId vào ProfileTab
-      ];
-    });
+    if (mounted) {
+      setState(() {
+        _screens = [
+          HomeTab(),
+          const ExploreTab(),
+          const ChatAI_Tab(),
+          const Ranked_Tab(),
+          ProfileTab(userId: userId), // Truyền userId vào ProfileTab
+        ];
+      });
+    }
   }
 
   // Xử lý khi thay đổi tab

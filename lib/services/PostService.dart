@@ -219,43 +219,4 @@ class PostService {
       throw Exception('Failed to fetch posts by hashtag: $e');
     }
   }
-
-  // Gửi bình luận mới
-  Future<void> addComment({
-    required int userId,
-    required int postId,
-    required String content,
-  }) async {
-    try {
-      await _client.from('comments').insert({
-        'uid': userId,
-        'pid': postId,
-        'content': content,
-        'created_at': DateTime.now().toIso8601String(),
-      });
-    } catch (e) {
-      throw Exception('Failed to add comment: $e');
-    }
-  }
-
-  // Lấy danh sách bình luận cho một bài đăng
-  Future<List<Comment>> getCommentsByPostId(
-    int postId, {
-    int limit = 8,
-    int offset = 0,
-  }) async {
-    try {
-      final response = await _client
-          .from('comments')
-          .select('*, users!uid(avatar, nickname, name)')
-          .eq('pid', postId)
-          .order('created_at', ascending: false)
-          .range(offset, offset + limit - 1);
-      return List<Comment>.from(
-        response.map((comment) => Comment.fromMap(comment)),
-      );
-    } catch (e) {
-      throw Exception('Failed to fetch comments: $e');
-    }
-  }
 }

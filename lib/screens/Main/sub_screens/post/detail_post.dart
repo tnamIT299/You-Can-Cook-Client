@@ -15,10 +15,12 @@ import 'package:you_can_cook/services/CommentService.dart';
 import 'package:you_can_cook/services/UserService.dart';
 import 'package:you_can_cook/services/LikeService.dart';
 import 'package:you_can_cook/db/db.dart' as db;
-import 'package:you_can_cook/helper/pick_Image.dart';
 import 'package:you_can_cook/widgets/loading_screen.dart';
 import 'package:you_can_cook/screens/Main/sub_screens/like/like_screen.dart';
-import 'package:giphy_picker/giphy_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void registerTimeagoMessages() {
   timeago.setLocaleMessages('vi', timeago.ViMessages());
@@ -49,6 +51,10 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
   bool _isEditingComment = false;
   int? _editingCommentId;
   int? _editingCommentIndex;
+  String? _selectedGifUrl; // Store selected GIF URL for preview
+  final TextEditingController _gifSearchController = TextEditingController();
+  List<String> _gifUrls = [];
+  bool _isLoadingGifs = false;
 
   @override
   void initState() {
@@ -69,6 +75,8 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
         }
       });
     });
+    // Load trending GIFs initially
+    _fetchGifs('');
   }
 
   @override
@@ -102,15 +110,6 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
     if (uid != null && mounted) {
       setState(() {
         _currentUserUid = uid;
-      });
-    }
-  }
-
-  Future<void> _pickImage() async {
-    final pickedFile = await ImagePickerUtil.pickImage();
-    if (pickedFile != null) {
-      setState(() {
-        selectedImages.add(File(pickedFile));
       });
     }
   }
@@ -195,7 +194,8 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
   }
 
   Future<void> _submitComment(dynamic userInfo) async {
-    if (_commentController.text.isEmpty || userInfo?.uid == null) {
+    if (_commentController.text.isEmpty && _selectedGifUrl == null ||
+        userInfo?.uid == null) {
       return;
     }
 
@@ -212,6 +212,7 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
         userId: userInfo.uid,
         postId: _currentPost.pid ?? 0,
         content: _commentController.text,
+        gifURL: _selectedGifUrl,
         createdAt: DateTime.now(),
         avatar: userInfo.avatar,
         nickname: userInfo.nickname ?? userInfo.name,
@@ -242,8 +243,9 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
             name: _currentPost.name,
           );
           _commentController.clear();
-          _offset += 1;
+          _selectedGifUrl = null;
           _isLoadingComments = false;
+          _offset += 1;
         });
       }
 
@@ -251,6 +253,7 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
         userId: userInfo.uid,
         postId: _currentPost.pid ?? 0,
         content: tempComment.content,
+        gifUrl: tempComment.gifURL,
       );
 
       await _commentService.updatePostCommentCount(
@@ -398,25 +401,105 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
     }
   }
 
-  Future<void> _pickGIF(BuildContext context) async {
-    try {
-      final gif = await GiphyPicker.pickGif(
-        context: context,
-        apiKey: 'QxBdVtcex9YYfnfZYJkC8BoWNxE6hw7A', // Thay bằng API Key của bạn
-      );
+  Future<void> _fetchGifs(String query) async {
+    setState(() {
+      _isLoadingGifs = true;
+    });
 
-      if (gif != null) {
-        // In ra URL của GIF để kiểm tra, chưa gửi bình luận
-        print('GIF selected: ${gif.url}');
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Đã chọn GIF: ${gif.url}')));
+    try {
+      final String apiKey = dotenv.env['GIF_API_KEY'] ?? '';
+      final String url =
+          query.isEmpty
+              ? 'https://api.giphy.com/v1/gifs/trending?api_key=$apiKey&limit=20'
+              : 'https://api.giphy.com/v1/gifs/search?api_key=$apiKey&q=$query&limit=20';
+
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _gifUrls = List<String>.from(
+            data['data'].map((gif) => gif['images']['fixed_height']['url']),
+          );
+          _isLoadingGifs = false;
+        });
+      } else {
+        throw Exception('Failed to load GIFs');
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Lỗi khi chọn GIF: $e')));
+      setState(() {
+        _isLoadingGifs = false;
+      });
     }
+  }
+
+  void _showGifPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return Container(
+          height: 400,
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              TextField(
+                controller: _gifSearchController,
+                decoration: InputDecoration(
+                  hintText: 'Tìm kiếm GIF...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                  prefixIcon: const Icon(Icons.search),
+                ),
+                onChanged: (value) {
+                  _fetchGifs(value);
+                },
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child:
+                    _isLoadingGifs
+                        ? const Center(child: CircularProgressIndicator())
+                        : _gifUrls.isEmpty
+                        ? const Center(child: Text('Không tìm thấy GIF'))
+                        : GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 4,
+                                mainAxisSpacing: 4,
+                              ),
+                          itemCount: _gifUrls.length,
+                          itemBuilder: (context, index) {
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _selectedGifUrl = _gifUrls[index];
+                                });
+                                Navigator.pop(context);
+                              },
+                              child: CachedNetworkImage(
+                                imageUrl: _gifUrls[index],
+                                fit: BoxFit.cover,
+                                placeholder:
+                                    (context, url) =>
+                                        const CircularProgressIndicator(),
+                                errorWidget:
+                                    (context, url, error) =>
+                                        const Icon(Icons.error),
+                              ),
+                            );
+                          },
+                        ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -706,9 +789,9 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                                         );
                                       },
                                       child: Text(
+                                        displayText,
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 2,
-                                        displayText,
                                         style: const TextStyle(
                                           color: Colors.black,
                                           fontWeight: FontWeight.bold,
@@ -750,6 +833,7 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                                               comment.name ??
                                               'Bạn',
                                           'content': comment.content,
+                                          'gifURL': comment.gifURL,
                                           'time': timeago.format(
                                             comment.createdAt,
                                             locale: 'vi',
@@ -767,11 +851,13 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                                               index,
                                             ),
                                         onEdit:
-                                            () => _startEditingComment(
-                                              comment.id,
-                                              comment.content,
-                                              index,
-                                            ),
+                                            comment.gifURL == null
+                                                ? () => _startEditingComment(
+                                                  comment.id,
+                                                  comment.content,
+                                                  index,
+                                                )
+                                                : null, // Disable edit for GIF comments
                                         onLike:
                                             () => _toggleLikeComment(
                                               comment,
@@ -805,79 +891,107 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
                       ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Row(
+                        child: Column(
                           children: [
-                            CircleAvatar(
-                              backgroundImage:
-                                  userInfo?.avatar != null
-                                      ? NetworkImage(userInfo.avatar)
-                                      : const AssetImage(
-                                            "assets/icons/logo.png",
-                                          )
-                                          as ImageProvider,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: TextField(
-                                controller: _commentController,
-                                decoration: InputDecoration(
-                                  hintText:
-                                      _isEditingComment
-                                          ? "Chỉnh sửa bình luận..."
-                                          : "Viết bình luận...",
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                    borderSide: BorderSide.none,
+                            if (_selectedGifUrl != null)
+                              Stack(
+                                children: [
+                                  CachedNetworkImage(
+                                    imageUrl: _selectedGifUrl!,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                    placeholder:
+                                        (context, url) =>
+                                            const CircularProgressIndicator(),
+                                    errorWidget:
+                                        (context, url, error) =>
+                                            const Icon(Icons.error),
                                   ),
-                                  filled: true,
-                                  fillColor: Colors.grey[200],
+                                  Positioned(
+                                    top: 0,
+                                    right: 0,
+                                    child: IconButton(
+                                      icon: const Icon(
+                                        Icons.close,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _selectedGifUrl = null;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundImage:
+                                      userInfo?.avatar != null
+                                          ? NetworkImage(userInfo.avatar)
+                                          : const AssetImage(
+                                                "assets/icons/logo.png",
+                                              )
+                                              as ImageProvider,
                                 ),
-                              ),
-                            ),
-                            if (_isEditingComment)
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.close,
-                                  color: Colors.red,
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _commentController,
+                                    decoration: InputDecoration(
+                                      hintText:
+                                          _isEditingComment
+                                              ? "Chỉnh sửa bình luận..."
+                                              : "Viết bình luận...",
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.grey[200],
+                                    ),
+                                  ),
                                 ),
-                                onPressed: _cancelEditing,
-                              ),
-                            // IconButton(
-                            //   icon: const Icon(
-                            //     Icons.image,
-                            //     color: Colors.green,
-                            //   ),
-                            //   onPressed: _pickImage,
-                            // ),
-                            IconButton(
-                              icon: const Icon(
-                                size: 40.0,
-                                Icons.gif,
-                                color: Colors.blue,
-                              ),
-                              onPressed: () {
-                                _pickGIF(context);
-                              },
-                            ),
-                            IconButton(
-                              icon: Icon(
-                                _isEditingComment ? Icons.check : Icons.send,
-                                color: AppColors.primary,
-                              ),
-                              onPressed: () {
-                                if (_isEditingComment) {
-                                  if (_editingCommentId != null &&
-                                      _editingCommentIndex != null) {
-                                    _editComment(
-                                      _editingCommentId!,
-                                      _commentController.text,
-                                    );
-                                    _cancelEditing();
-                                  }
-                                } else {
-                                  _submitComment(userInfo);
-                                }
-                              },
+                                if (_isEditingComment)
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.close,
+                                      color: Colors.red,
+                                    ),
+                                    onPressed: _cancelEditing,
+                                  ),
+                                IconButton(
+                                  icon: const Icon(
+                                    size: 35.0,
+                                    Icons.gif,
+                                    color: Colors.blue,
+                                  ),
+                                  onPressed: _showGifPicker,
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    _isEditingComment
+                                        ? Icons.check
+                                        : Icons.send,
+                                    color: AppColors.primary,
+                                  ),
+                                  onPressed: () {
+                                    if (_isEditingComment) {
+                                      if (_editingCommentId != null &&
+                                          _editingCommentIndex != null) {
+                                        _editComment(
+                                          _editingCommentId!,
+                                          _commentController.text,
+                                        );
+                                        _cancelEditing();
+                                      }
+                                    } else {
+                                      _submitComment(userInfo);
+                                    }
+                                  },
+                                ),
+                              ],
                             ),
                           ],
                         ),

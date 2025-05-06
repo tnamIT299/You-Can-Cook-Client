@@ -10,6 +10,7 @@ class CommentService {
     required int userId,
     required int postId,
     required String content,
+    String? gifUrl,
   }) async {
     try {
       // Thêm bình luận vào bảng comments và lấy thông tin bình luận vừa tạo
@@ -20,6 +21,7 @@ class CommentService {
                 'uid': userId,
                 'pid': postId,
                 'content': content,
+                'gifURL': gifUrl,
                 'created_at': DateTime.now().toIso8601String(),
               })
               .select()
@@ -49,7 +51,11 @@ class CommentService {
           'type': 'comment',
           'pid': postId,
           'content':
-              '${actorResponse['nickname'] ?? actorResponse['name']} đã bình luận trên bài viết của bạn: "${content.length > 50 ? '${content.substring(0, 50)}...' : content}"',
+              '${actorResponse['nickname'] ?? actorResponse['name']} đã bình luận trên bài viết của bạn: "${gifUrl != null
+                  ? 'GIF'
+                  : content.length > 50
+                  ? '${content.substring(0, 50)}...'
+                  : content}"',
           'is_read': false,
           'created_at': DateTime.now().toIso8601String(),
         });
@@ -74,6 +80,18 @@ class CommentService {
 
   Future<Comment> updateComment(int commentId, String newContent) async {
     try {
+      // Kiểm tra xem bình luận có gifUrl hay không
+      final commentResponse =
+          await supabaseClient
+              .from('comments')
+              .select('gifURL')
+              .eq('id', commentId)
+              .single();
+
+      if (commentResponse['gifURL'] != null) {
+        throw Exception('Bình luận GIF không thể chỉnh sửa.');
+      }
+
       final response =
           await supabaseClient
               .from('comments')
@@ -87,7 +105,6 @@ class CommentService {
     }
   }
 
-  // Sửa phần này trong CommentService.dart
   Future<List<Comment>> getCommentsByPostId(
     int postId, {
     int limit = 8,
@@ -133,13 +150,36 @@ class CommentService {
             });
           }),
         );
-      } else {}
+      } else {
+        final response = await supabaseClient
+            .from('comments')
+            .select('''
+          *,
+          users!uid(avatar, nickname, name, uid),
+          like_count:comment_likes(count)
+        ''')
+            .eq('pid', postId)
+            .order('created_at', ascending: false)
+            .range(offset, offset + limit - 1);
+
+        return List<Comment>.from(
+          response.map((comment) {
+            final likeCount =
+                (comment['like_count'] as List<dynamic>?)?.isNotEmpty == true
+                    ? (comment['like_count'][0]['count'] as int?) ?? 0
+                    : 0;
+            return Comment.fromMap({
+              ...comment,
+              'like_count': likeCount,
+              'is_liked': false,
+            });
+          }),
+        );
+      }
     } catch (e) {
       print('Error fetching comments: $e');
       throw Exception('Failed to fetch comments: $e');
     }
-    // Ensure a return or throw statement at the end
-    throw Exception('Unexpected error: No comments fetched.');
   }
 
   Future<void> updatePostCommentCount(
@@ -164,7 +204,6 @@ class CommentService {
     }
   }
 
-  // Phương thức thích bình luận
   Future<int> likeComment(int commentId, int userId) async {
     try {
       // Kiểm tra xem đã thích chưa
@@ -233,7 +272,6 @@ class CommentService {
     }
   }
 
-  // Phương thức bỏ thích bình luận
   Future<int> unlikeComment(int commentId, int userId) async {
     try {
       await supabaseClient

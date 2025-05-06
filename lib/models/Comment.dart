@@ -5,18 +5,20 @@ class Comment {
   final int userId;
   final int postId;
   final String content;
+  final String? gifURL; // New field for GIF URL
   final DateTime createdAt;
   final String? name;
   final String? nickname;
   final String? avatar;
-  final int likeCount; // New field for like count
-  final bool isLiked; // New field for liked state
+  final int likeCount;
+  final bool isLiked;
 
   Comment({
     required this.id,
     required this.userId,
     required this.postId,
     required this.content,
+    this.gifURL,
     required this.createdAt,
     this.name,
     this.nickname,
@@ -31,6 +33,7 @@ class Comment {
       userId: map['uid'] ?? map['users']['uid'] ?? 0,
       postId: map['pid'] ?? 0,
       content: map['content'] ?? '',
+      gifURL: map['gifURL'],
       createdAt: DateTime.parse(
         map['created_at'] ?? DateTime.now().toIso8601String(),
       ),
@@ -49,6 +52,7 @@ class Comment {
       'uid': userId,
       'pid': postId,
       'content': content,
+      'gifURL': gifURL,
       'created_at': createdAt.toIso8601String(),
       'name': name,
       'nickname': nickname,
