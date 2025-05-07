@@ -54,6 +54,9 @@ dependencies:
   speech_to_text: ^7.0.0
   giphy_picker: ^3.0.2
   cached_network_image: ^3.4.1
+  video_player: ^2.9.5
+  video_thumbnail:
+    path: ./android/video_thumbnail
 
 dev_dependencies:
   flutter_test:

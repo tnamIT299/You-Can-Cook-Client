@@ -152,9 +152,7 @@ class _FollowScreenState extends State<FollowScreen> {
                                 backgroundImage:
                                     user['avatar'] != null
                                         ? NetworkImage(user['avatar'])
-                                        : AssetImage(
-                                              'assets/images/default_avatar.png',
-                                            )
+                                        : AssetImage('assets/icons/logo.png')
                                             as ImageProvider,
                               ),
                               title: Text(user['name'] ?? 'Không có tên'),

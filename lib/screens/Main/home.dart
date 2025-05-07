@@ -6,6 +6,7 @@ import 'package:you_can_cook/screens/Main/main_tab/ranked_tab.dart';
 import 'package:you_can_cook/screens/Main/main_tab/profile_tab.dart';
 import 'package:you_can_cook/utils/color.dart';
 import 'package:you_can_cook/services/UserService.dart';
+import 'package:you_can_cook/screens/Main/main_tab/reel_tab.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -35,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _screens = [
           HomeTab(),
+          const ReelTab(),
           const ExploreTab(),
           const ChatAI_Tab(),
           const Ranked_Tab(),
@@ -52,35 +54,52 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(child: _screens[_selectedIndex]),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: AppColors.background,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: Color(0xFF868686),
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant),
-            label: 'Bảng tin',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Khám phá'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.auto_awesome_rounded),
-            label: 'AI Chat',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.emoji_events), label: 'BXH'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Cá nhân',
-          ),
-        ],
+      bottomNavigationBar: SizedBox(
+        height: 50,
+        child: BottomNavigationBar(
+          backgroundColor: AppColors.background,
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: Color(0xFF868686),
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          type: BottomNavigationBarType.fixed,
+          selectedLabelStyle: TextStyle(fontSize: 12, height: 1.2),
+          unselectedLabelStyle: TextStyle(fontSize: 10, height: 1.2),
+          iconSize: 24,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.restaurant),
+              label: 'Bảng tin',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.video_collection_rounded),
+              label: 'Reel',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.explore),
+              label: 'Khám phá',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.auto_awesome_rounded),
+              label: 'AI Chat',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.emoji_events),
+              label: 'BXH',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              label: 'Cá nhân',
+            ),
+          ],
+        ),
       ),
     );
   }

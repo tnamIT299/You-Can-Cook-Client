@@ -12,6 +12,7 @@ import 'package:you_can_cook/widgets/loading_screen.dart';
 import 'package:you_can_cook/utils/color.dart';
 import 'package:you_can_cook/services/FollowerService.dart';
 import 'package:you_can_cook/services/UserService.dart';
+import 'package:you_can_cook/widgets/card_reel_profile.dart';
 
 class ProfileTab extends StatefulWidget {
   final int userId;
@@ -25,14 +26,15 @@ class _ProfileTabState extends State<ProfileTab>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int? currentUserUid;
+  Future<int?>? _fetchCurrentUserUidFuture;
 
   @override
   void initState() {
     super.initState();
     print("UserId passed to ProfileTab: ${widget.userId}");
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
 
-    _fetchCurrentUserUid();
+    _fetchCurrentUserUidFuture = _fetchCurrentUserUid();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final store = StoreProvider.of<AppState>(context, listen: false);
@@ -49,7 +51,7 @@ class _ProfileTabState extends State<ProfileTab>
     });
   }
 
-  Future<void> _fetchCurrentUserUid() async {
+  Future<int?> _fetchCurrentUserUid() async {
     final userService = UserService();
     final uid = await userService.getCurrentUserUid();
     if (uid != null) {
@@ -57,8 +59,10 @@ class _ProfileTabState extends State<ProfileTab>
         currentUserUid = uid;
         print("Current user UID: $uid");
       });
+      return uid;
     } else {
       debugPrint("Current user UID is null.");
+      return null;
     }
   }
 
@@ -314,6 +318,7 @@ class _ProfileTabState extends State<ProfileTab>
                       tabs: const [
                         Tab(text: "Bài đăng"),
                         Tab(text: "Ảnh"),
+                        Tab(text: "Reel"),
                         Tab(text: "Huy hiệu"),
                       ],
                     ),
@@ -389,6 +394,28 @@ class _ProfileTabState extends State<ProfileTab>
                                 }
                               },
                             ),
+                        FutureBuilder<int?>(
+                          future: _fetchCurrentUserUidFuture,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+                            if (snapshot.hasError) {
+                              return const Center(
+                                child: Text("Lỗi khi lấy UID"),
+                              );
+                            }
+                            return state.userVideos.isEmpty
+                                ? const Center(child: Text("Chưa có video nào"))
+                                : CardReelProfile(
+                                  videos: state.userVideos,
+                                  currentUserUid: currentUserUid?.toString(),
+                                );
+                          },
+                        ),
                         userInfo.badges == null || userInfo.badges.isEmpty
                             ? const Center(child: Text("Chưa có huy hiệu nào"))
                             : CardBadgesTab(

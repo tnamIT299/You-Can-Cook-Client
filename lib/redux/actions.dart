@@ -43,6 +43,11 @@ class SetUserPhotos {
   SetUserPhotos(this.photos);
 }
 
+class SetUserVideos {
+  final List<String> videos;
+  SetUserVideos(this.videos);
+}
+
 class FetchUserPostsAndPhotos {
   final int uid;
   FetchUserPostsAndPhotos(this.uid);

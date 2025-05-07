@@ -5,6 +5,7 @@ import 'package:you_can_cook/models/Post.dart';
 import 'package:you_can_cook/models/Comment.dart';
 import 'package:you_can_cook/services/UserService.dart';
 import 'package:you_can_cook/services/PostService.dart';
+import 'package:you_can_cook/services/ReelService.dart';
 import 'package:you_can_cook/services/CommentService.dart';
 import 'package:you_can_cook/db/db.dart';
 
@@ -36,10 +37,13 @@ void appMiddleware(
     store.dispatch(SetLoading(true));
     try {
       final postService = PostService(supabaseClient);
+      final reelService = ReelService();
       final posts = await postService.fetchPostsByUid(action.uid);
       final photos = await postService.fetchImagesByUid(action.uid);
+      final videos = await reelService.fetchVideosByUid(action.uid);
       store.dispatch(SetUserPosts(posts));
       store.dispatch(SetUserPhotos(photos));
+      store.dispatch(SetUserVideos(videos));
       store.dispatch(SetLoading(false));
     } catch (e) {
       store.dispatch(SetError(e.toString()));

@@ -10,6 +10,7 @@ class AppState {
   final String? errorMessage;
   final List<Post> userPosts;
   final List<String> userPhotos;
+  final List<String> userVideos;
   final Map<int, List<Comment>> postComments;
 
   AppState({
@@ -19,6 +20,7 @@ class AppState {
     this.errorMessage,
     this.userPosts = const [],
     this.userPhotos = const [],
+    this.userVideos = const [],
     this.postComments = const {},
   });
 
@@ -29,6 +31,7 @@ class AppState {
     String? errorMessage,
     List<Post>? userPosts,
     List<String>? userPhotos,
+    List<String>? userVideos,
     Map<int, List<Comment>>? postComments,
   }) {
     return AppState(
@@ -38,6 +41,7 @@ class AppState {
       errorMessage: errorMessage ?? this.errorMessage,
       userPosts: userPosts ?? this.userPosts,
       userPhotos: userPhotos ?? this.userPhotos,
+      userVideos: userVideos ?? this.userVideos,
       postComments: postComments ?? this.postComments,
     );
   }
@@ -54,6 +58,7 @@ AppState appReducer(AppState state, dynamic action) {
       profileUserInfo: null,
       userPosts: [],
       userPhotos: [],
+      userVideos: [],
       postComments: {},
     );
   } else if (action is ClearComments) {
@@ -66,6 +71,8 @@ AppState appReducer(AppState state, dynamic action) {
     return state.copyWith(userPosts: action.posts, isLoading: false);
   } else if (action is SetUserPhotos) {
     return state.copyWith(userPhotos: action.photos, isLoading: false);
+  } else if (action is SetUserVideos) {
+    return state.copyWith(userVideos: action.videos, isLoading: false);
   } else if (action is DeleteUserPhoto) {
     return state.copyWith(
       userPhotos: List.from(state.userPhotos)..remove(action.photoUrl),

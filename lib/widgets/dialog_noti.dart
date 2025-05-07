@@ -10,24 +10,28 @@ void show_Dialog(
 ) {
   showDialog(
     context: context,
-    barrierDismissible:
-        false, // Không cho phép đóng dialog bằng cách nhấn ra ngoài
+    barrierDismissible: false,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text(title),
+        title: Text(
+          title,
+          style: TextStyle(overflow: TextOverflow.ellipsis),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+        ),
         content: Text(content),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(); // Đóng dialog
-              onCancelPressed(); // Thực hiện hành động khi nhấn nút "OK"
+              Navigator.of(context).pop();
+              onCancelPressed();
             },
             child: Text('Huỷ', style: TextStyle(color: Colors.red)),
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(); // Đóng dialog
-              onOkPressed(); // Thực hiện hành động khi nhấn nút "OK"
+              Navigator.of(context).pop();
+              onOkPressed();
             },
             child: Text('OK', style: TextStyle(color: AppColors.primary)),
           ),

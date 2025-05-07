@@ -68,18 +68,22 @@ class _HomeTabState extends State<HomeTab> {
       if (firebaseUser != null) {
         final user = await _userService.getUserInfo(firebaseUser.email!);
         final uid = await _userService.getCurrentUserUid();
-        setState(() {
-          _currentUser = user;
-          _currentUserUid = uid;
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _currentUser = user;
+            _currentUserUid = uid;
+            _isLoading = false;
+          });
+        }
         // Sau khi lấy được UID, gọi fetchPosts
         await _fetchPosts();
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
