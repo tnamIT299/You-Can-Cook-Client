@@ -57,6 +57,7 @@ dependencies:
   video_player: ^2.9.5
   video_thumbnail:
     path: ./android/video_thumbnail
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:

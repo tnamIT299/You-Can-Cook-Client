@@ -7,6 +7,7 @@ import 'package:you_can_cook/screens/Main/main_tab/profile_tab.dart';
 import 'package:you_can_cook/screens/Main/sub_screens/reel/edit_privacy_reel.dart';
 import 'package:you_can_cook/services/FollowerService.dart';
 import 'package:you_can_cook/widgets/dialog_noti.dart';
+import 'package:you_can_cook/widgets/report-dialog.dart';
 
 class CardReel extends StatefulWidget {
   final Reel? reel;
@@ -145,6 +146,22 @@ class _CardReelState extends State<CardReel> {
     return "$minutes:$seconds";
   }
 
+  Future<void> _showReportDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => ReportDialog(
+            reporterUid: widget.currentUserUid!,
+            reportedUid: widget.reel!.uid.toString(),
+            reel_id: widget.reel!.reel_id.toString(),
+          ),
+    );
+
+    if (result == true) {
+      // Xử lý thêm nếu cần sau khi báo cáo thành công
+    }
+  }
+
   void _showOptionsMenu() {
     if (widget.reel == null) return;
 
@@ -246,27 +263,9 @@ class _CardReelState extends State<CardReel> {
                       'Báo cáo video',
                       style: TextStyle(color: Colors.white),
                     ),
-                    onTap: () async {
-                      // Navigator.pop(context);
-                      // try {
-                      //   await _reelService._supabase.from('reports').insert({
-                      //     'reel_id': widget.reel!.reel_id,
-                      //     'user_id': widget.currentUserUid,
-                      //     'reason': 'Nội dung không phù hợp',
-                      //     'created_at': DateTime.now().toIso8601String(),
-                      //   });
-                      //   if (mounted) {
-                      //     widget.scaffoldMessengerState?.showSnackBar(
-                      //       const SnackBar(content: Text("Báo cáo đã được gửi")),
-                      //     );
-                      //   }
-                      // } catch (e) {
-                      //   if (mounted) {
-                      //     widget.scaffoldMessengerState?.showSnackBar(
-                      //       SnackBar(content: Text("Lỗi khi gửi báo cáo: $e")),
-                      //     );
-                      //   }
-                      // }
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showReportDialog();
                     },
                   ),
                   ListTile(

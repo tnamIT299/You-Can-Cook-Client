@@ -2,6 +2,7 @@ import 'package:you_can_cook/models/Post.dart';
 import 'package:you_can_cook/models/Comment.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:you_can_cook/db/db.dart';
+import 'package:you_can_cook/models/Reel.dart';
 
 class FetchUserInfo {
   final String email;
@@ -44,7 +45,7 @@ class SetUserPhotos {
 }
 
 class SetUserVideos {
-  final List<String> videos;
+  final List<Reel> videos;
   SetUserVideos(this.videos);
 }
 

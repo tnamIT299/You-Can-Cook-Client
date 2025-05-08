@@ -79,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'Bảng tin',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.video_collection_rounded),
+              icon: Icon(Icons.smart_display_rounded),
               label: 'Reel',
             ),
             BottomNavigationBarItem(

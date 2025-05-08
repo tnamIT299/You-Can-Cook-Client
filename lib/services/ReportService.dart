@@ -9,6 +9,7 @@ class UserService {
     required String reporterUid,
     required String content,
     String? pid,
+    String? reel_id,
   }) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -21,6 +22,7 @@ class UserService {
         'reported_id': reportedUid,
         'content': content,
         'pid': pid,
+        'reel_id': reel_id,
         'created_at': DateTime.now().toIso8601String(),
         'is_read': false,
       });

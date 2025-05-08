@@ -1,4 +1,5 @@
 import 'package:redux/redux.dart';
+import 'package:you_can_cook/models/Reel.dart';
 import 'actions.dart';
 import 'package:you_can_cook/models/Post.dart';
 import 'package:you_can_cook/models/Comment.dart';
@@ -10,7 +11,7 @@ class AppState {
   final String? errorMessage;
   final List<Post> userPosts;
   final List<String> userPhotos;
-  final List<String> userVideos;
+  final List<Reel> userVideos;
   final Map<int, List<Comment>> postComments;
 
   AppState({
@@ -31,7 +32,7 @@ class AppState {
     String? errorMessage,
     List<Post>? userPosts,
     List<String>? userPhotos,
-    List<String>? userVideos,
+    List<Reel>? userVideos,
     Map<int, List<Comment>>? postComments,
   }) {
     return AppState(

@@ -84,7 +84,8 @@ class _CreateReelState extends State<CreateReel> {
       final newReel = Reel(
         uid: userInfo.uid,
         reelContent: contentController.text,
-        reelUrl: '', // Will be updated after upload
+        reelUrl: '',
+        thumbnailUrl: '',
         reelHashtag: hashtags,
         reelLike: 0,
         reelComment: 0,
@@ -114,7 +115,7 @@ class _CreateReelState extends State<CreateReel> {
       });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Lỗi khi tạo reel: $e")));
+      ).showSnackBar(SnackBar(content: Text("Opps! Something went wrong")));
     }
   }
 

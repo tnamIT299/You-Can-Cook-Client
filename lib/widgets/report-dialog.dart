@@ -5,11 +5,13 @@ class ReportDialog extends StatefulWidget {
   final String reporterUid;
   final String reportedUid; // UID của người bị báo cáo
   final String? pid; // ID của bài post (nếu có)
+  final String? reel_id; // ID của bình luận (nếu có)
 
   const ReportDialog({
     required this.reporterUid,
     required this.reportedUid,
     this.pid,
+    this.reel_id,
     super.key,
   });
 
@@ -41,6 +43,7 @@ class _ReportDialogState extends State<ReportDialog> {
         reportedUid: widget.reportedUid,
         content: _reportController.text.trim(),
         pid: widget.pid,
+        reel_id: widget.reel_id,
       );
       Navigator.of(
         context,

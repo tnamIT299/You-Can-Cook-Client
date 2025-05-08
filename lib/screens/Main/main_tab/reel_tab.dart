@@ -1,144 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:you_can_cook/widgets/card_reel.dart';
-// import 'package:you_can_cook/screens/Main/main_tab/reel_tab.dart';
-// import 'package:you_can_cook/models/Reel.dart';
-// import 'package:you_can_cook/services/ReelService.dart';
-// import 'package:you_can_cook/screens/Main/sub_screens/reel/create_reel.dart';
-// import 'package:you_can_cook/services/UserService.dart';
-
-// class ReelTab extends StatefulWidget {
-//   const ReelTab({super.key});
-
-//   @override
-//   State<ReelTab> createState() => _ReelTabState();
-// }
-
-// class _ReelTabState extends State<ReelTab> {
-//   final ReelService _reelService = ReelService();
-//   final UserService _userService = UserService();
-//   late Future<List<Reel>> _reelsFuture;
-//   int? _currentUserUid;
-//   final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
-//       GlobalKey<ScaffoldMessengerState>();
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _reelsFuture = Future.value([]);
-//     _fetchUserInfo();
-//   }
-
-//   Future<void> _fetchUserInfo() async {
-//     try {
-//       final uid = await _userService.getCurrentUserUid();
-//       setState(() {
-//         _currentUserUid = uid;
-//         _reelsFuture = _reelService.fetchFilteredReels(_currentUserUid!);
-//       });
-//     } catch (e) {
-//       setState(() {
-//         _reelsFuture = Future.error('Không thể lấy UID: $e');
-//       });
-//     }
-//   }
-
-//   Future<void> _refreshReels() async {
-//     setState(() {
-//       _reelsFuture = _reelService.fetchFilteredReels(_currentUserUid!);
-//     });
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return ScaffoldMessenger(
-//       key: _scaffoldMessengerKey,
-//       child: Scaffold(
-//         backgroundColor: Colors.black,
-//         appBar: AppBar(
-//           automaticallyImplyLeading: false,
-//           backgroundColor: Colors.black,
-//           title: const Text(
-//             'Reels',
-//             style: TextStyle(
-//               color: Colors.white,
-//               fontWeight: FontWeight.bold,
-//               fontSize: 30,
-//             ),
-//           ),
-//           actions: [
-//             IconButton(
-//               icon: const Icon(
-//                 Icons.add_circle_outline,
-//                 color: Colors.white,
-//                 size: 30,
-//               ),
-//               onPressed: () {
-//                 Navigator.push(
-//                   context,
-//                   MaterialPageRoute(builder: (context) => const CreateReel()),
-//                 );
-//               },
-//             ),
-//             IconButton(
-//               icon: const Icon(
-//                 Icons.more_vert_outlined,
-//                 color: Colors.white,
-//                 size: 30,
-//               ),
-//               onPressed: () {
-//                 Navigator.push(
-//                   context,
-//                   MaterialPageRoute(builder: (context) => const CreateReel()),
-//                 );
-//               },
-//             ),
-//           ],
-//         ),
-//         body: FutureBuilder<List<Reel>>(
-//           future: _reelsFuture,
-//           builder: (context, snapshot) {
-//             if (snapshot.connectionState == ConnectionState.waiting) {
-//               return const Center(child: CircularProgressIndicator());
-//             } else if (snapshot.hasError) {
-//               return Center(
-//                 child: Text(
-//                   'Error: ${snapshot.error}',
-//                   style: const TextStyle(color: Colors.white),
-//                 ),
-//               );
-//             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-//               return const Center(
-//                 child: Text(
-//                   'Chưa có video nào',
-//                   style: TextStyle(color: Colors.white),
-//                 ),
-//               );
-//             }
-
-//             final reels = snapshot.data!;
-//             return RefreshIndicator(
-//               onRefresh: _refreshReels, // Gọi _refreshReels khi kéo xuống
-//               child: PageView.builder(
-//                 scrollDirection: Axis.vertical,
-//                 itemCount: reels.length,
-//                 itemBuilder: (context, index) {
-//                   return CardReel(
-//                     reel: reels[index],
-//                     currentUserUid: _currentUserUid.toString(),
-//                     onReelDeleted: _refreshReels,
-//                     scaffoldMessengerState: _scaffoldMessengerKey.currentState,
-//                   );
-//                 },
-//               ),
-//             );
-//           },
-//         ),
-//       ),
-//     );
-//   }
-// }
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:you_can_cook/widgets/card_reel.dart';
@@ -174,6 +33,9 @@ class _ReelTabState extends State<ReelTab> {
   late PageController _pageController;
   List<Reel> _reels = [];
   bool _isLoadingInitialReels = false;
+  bool _hasMore = true;
+  int _currentPage = 0;
+  final int _pageSize = 10;
 
   @override
   void initState() {
@@ -190,6 +52,7 @@ class _ReelTabState extends State<ReelTab> {
     if (widget.initialVideos != null && widget.initialVideos!.isNotEmpty) {
       _isLoadingInitialReels = true;
       _loadInitialReels();
+      _pageController.addListener(_loadMoreReels);
     } else {
       _reelsFuture = Future.value([]);
       if (_currentUserUid == null) {
@@ -216,16 +79,15 @@ class _ReelTabState extends State<ReelTab> {
 
   Future<void> _loadInitialReels() async {
     try {
-      final List<Reel> loadedReels = [];
-      for (String videoUrl in widget.initialVideos!) {
-        final reel = await _reelService.fetchReelByUrl(videoUrl);
-        if (reel != null) {
-          loadedReels.add(reel);
-        }
-      }
+      final loadedReels = await _reelService.fetchReelsByUrls(
+        widget.initialVideos!,
+        limit: _pageSize,
+        offset: _currentPage * _pageSize,
+      );
       setState(() {
         _reels = loadedReels;
         _isLoadingInitialReels = false;
+        _hasMore = loadedReels.length == _pageSize;
       });
     } catch (e) {
       setState(() {
@@ -237,15 +99,27 @@ class _ReelTabState extends State<ReelTab> {
     }
   }
 
+  void _loadMoreReels() {
+    if (!_hasMore || _isLoadingInitialReels) return;
+    if (_pageController.page! >= _reels.length - 1) {
+      setState(() {
+        _isLoadingInitialReels = true;
+        _currentPage++;
+      });
+      _loadInitialReels();
+    }
+  }
+
   Future<void> _refreshReels() async {
     if (_reels.isNotEmpty) {
-      // Nếu đang hiển thị initialVideos, làm mới _reels
       setState(() {
+        _currentPage = 0;
+        _reels = [];
+        _hasMore = true;
         _isLoadingInitialReels = true;
       });
       await _loadInitialReels();
     } else {
-      // Nếu hiển thị từ fetchFilteredReels, làm mới _reelsFuture
       setState(() {
         _reelsFuture = _reelService.fetchFilteredReels(_currentUserUid!);
       });
@@ -254,6 +128,7 @@ class _ReelTabState extends State<ReelTab> {
 
   @override
   void dispose() {
+    _pageController.removeListener(_loadMoreReels);
     _pageController.dispose();
     super.dispose();
   }
@@ -306,7 +181,7 @@ class _ReelTabState extends State<ReelTab> {
         ),
         body:
             _reels.isNotEmpty
-                ? _isLoadingInitialReels
+                ? _isLoadingInitialReels && _reels.isEmpty
                     ? const Center(child: CircularProgressIndicator())
                     : _reels.isEmpty
                     ? const Center(child: Text("Không tìm thấy video nào"))
@@ -315,8 +190,13 @@ class _ReelTabState extends State<ReelTab> {
                       child: PageView.builder(
                         controller: _pageController,
                         scrollDirection: Axis.vertical,
-                        itemCount: _reels.length,
+                        itemCount: _reels.length + (_hasMore ? 1 : 0),
                         itemBuilder: (context, index) {
+                          if (index == _reels.length) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
                           final reel = _reels[index];
                           return CardReel(
                             reel: reel,
@@ -336,14 +216,14 @@ class _ReelTabState extends State<ReelTab> {
                     } else if (snapshot.hasError) {
                       return Center(
                         child: Text(
-                          'Error: ${snapshot.error}',
+                          'Error: Opps! Something went wrong',
                           style: const TextStyle(color: Colors.white),
                         ),
                       );
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return const Center(
                         child: Text(
-                          'Chưa có video nào',
+                          'Đang tải...',
                           style: TextStyle(color: Colors.white),
                         ),
                       );

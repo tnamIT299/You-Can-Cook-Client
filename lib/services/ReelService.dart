@@ -1,7 +1,9 @@
 import 'dart:io';
-
+import 'package:video_thumbnail/video_thumbnail.dart';
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:you_can_cook/models/Reel.dart';
+import 'package:path_provider/path_provider.dart';
 
 class ReelService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -51,37 +53,41 @@ class ReelService {
     }
   }
 
-  // Fetch videos by UID from the reel bucket
-  Future<List<String>> fetchVideosByUid(int uid) async {
+  Future<List<Reel>> fetchVideosByUid(int uid) async {
     try {
-      final response = await _supabase.storage.from('reel').list(path: '$uid/');
-      final videoUrls =
-          response.map((file) {
-            return _supabase.storage
-                .from('reel')
-                .getPublicUrl('$uid/${file.name}');
-          }).toList();
-      print(videoUrls);
-      return videoUrls;
+      // Lấy danh sách Reel từ bảng reels dựa trên uid
+      final response = await _supabase
+          .from('reels')
+          .select('*, users(nickname, avatar, name)')
+          .eq('uid', uid)
+          .order('createAt', ascending: false);
+
+      return (response as List<dynamic>)
+          .map((reel) => Reel.fromMap(reel))
+          .toList();
     } catch (e) {
       throw Exception('Failed to fetch videos: $e');
     }
   }
 
-  Future<Reel?> fetchReelByUrl(String reelUrl) async {
+  Future<List<Reel>> fetchReelsByUrls(
+    List<String> videoUrls, {
+    int limit = 5,
+    int offset = 0,
+  }) async {
     try {
-      final response =
-          await _supabase
-              .from('reels')
-              .select('*, users(uid, nickname, avatar, name)')
-              .eq('reelUrl', reelUrl)
-              .maybeSingle();
+      final response = await _supabase
+          .from('reels')
+          .select('*, users(nickname, avatar, name)')
+          .inFilter('reelUrl', videoUrls)
+          .range(offset, offset + limit - 1)
+          .order('createAt', ascending: false);
 
-      if (response == null) return null;
-
-      return Reel.fromMap(response);
+      return (response as List<dynamic>)
+          .map((reel) => Reel.fromMap(reel))
+          .toList();
     } catch (e) {
-      throw Exception('Failed to fetch reel by URL: $e');
+      throw Exception('Failed to fetch reels by URLs: $e');
     }
   }
 
@@ -100,11 +106,36 @@ class ReelService {
         .from('reel')
         .getPublicUrl('$userId/$fileName');
 
+    // Tạo thumbnail từ video
+    final thumbnailData = await VideoThumbnail.thumbnailData(
+      video: videoPath,
+      imageFormat: ImageFormat.PNG,
+      maxHeight: 150,
+      quality: 75,
+    );
+
+    String? thumbnailUrl;
+    if (thumbnailData != null) {
+      final thumbnailFileName =
+          '${DateTime.now().millisecondsSinceEpoch}_thumb.png';
+      final tempDir = await getTemporaryDirectory();
+      final thumbnailFile = File('${tempDir.path}/$thumbnailFileName');
+      await thumbnailFile.writeAsBytes(thumbnailData);
+      await _supabase.storage
+          .from('reel-thumbnails')
+          .upload('$userId/$thumbnailFileName', thumbnailFile);
+      thumbnailUrl = _supabase.storage
+          .from('reel-thumbnails')
+          .getPublicUrl('$userId/$thumbnailFileName');
+      // Xóa file tạm thời sau khi upload
+      await thumbnailFile.delete();
+    }
     // Save reel metadata to the database
     await _supabase.from('reels').insert({
       'uid': reel.uid,
       'reelContent': reel.reelContent,
       'reelUrl': reelUrl,
+      'thumbnailUrl': thumbnailUrl,
       'reelHashtag': reel.reelHashtag,
       'reelLike': 0,
       'reelComment': 0,

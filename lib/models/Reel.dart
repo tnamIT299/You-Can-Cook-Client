@@ -8,6 +8,7 @@ class Reel {
   final int uid;
   final String? reelContent;
   final String reelUrl;
+  final String? thumbnailUrl;
   final List<String>? reelHashtag;
   final int? reelLike;
   final int? reelComment;
@@ -23,6 +24,7 @@ class Reel {
     required this.uid,
     this.reelContent,
     required this.reelUrl,
+    this.thumbnailUrl,
     this.reelHashtag,
     this.reelLike,
     this.reelComment,
@@ -40,6 +42,7 @@ class Reel {
     int? uid,
     String? reelContent,
     String? reelUrl,
+    String? thumbnailUrl,
     List<String>? reelHashtag,
     int? reelLike,
     int? reelComment,
@@ -56,6 +59,7 @@ class Reel {
       uid: uid ?? this.uid,
       reelContent: reelContent ?? this.reelContent,
       reelUrl: reelUrl ?? this.reelUrl,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       reelHashtag: reelHashtag ?? this.reelHashtag,
       reelLike: reelLike ?? this.reelLike,
       reelComment: reelComment ?? this.reelComment,
@@ -75,6 +79,7 @@ class Reel {
       'uid': uid,
       'reelContent': reelContent,
       'reelUrl': reelUrl,
+      'thumbnailUrl': thumbnailUrl,
       'reelHashtag': reelHashtag,
       'reelLike': reelLike,
       'reelComment': reelComment,
@@ -95,6 +100,7 @@ class Reel {
       reelContent:
           map['reelContent'] != null ? map['reelContent'] as String : null,
       reelUrl: map['reelUrl'] as String,
+      thumbnailUrl: map['thumbnailUrl'] as String,
       reelHashtag:
           map['reelHashtag'] != null
               ? (map['reelHashtag'] is String
@@ -135,7 +141,7 @@ class Reel {
 
   @override
   String toString() {
-    return 'Reel(reel_id: $reel_id, uid: $uid, reelContent: $reelContent, reelUrl: $reelUrl, reelHashtag: $reelHashtag, reelLike: $reelLike, reelComment: $reelComment, reelSave: $reelSave, reelRange: $reelRange, createAt: $createAt, nickname: $nickname, name: $name, avatar: $avatar, isWarning: $isWarning)';
+    return 'Reel(reel_id: $reel_id, uid: $uid, reelContent: $reelContent, reelUrl: $reelUrl,thumbnailUrl:$thumbnailUrl , reelHashtag: $reelHashtag, reelLike: $reelLike, reelComment: $reelComment, reelSave: $reelSave, reelRange: $reelRange, createAt: $createAt, nickname: $nickname, name: $name, avatar: $avatar, isWarning: $isWarning)';
   }
 
   @override
@@ -146,6 +152,7 @@ class Reel {
         other.uid == uid &&
         other.reelContent == reelContent &&
         other.reelUrl == reelUrl &&
+        other.thumbnailUrl == thumbnailUrl &&
         listEquals(other.reelHashtag, reelHashtag) &&
         other.reelLike == reelLike &&
         other.reelComment == reelComment &&
@@ -164,6 +171,7 @@ class Reel {
         uid.hashCode ^
         reelContent.hashCode ^
         reelUrl.hashCode ^
+        thumbnailUrl.hashCode ^
         reelHashtag.hashCode ^
         reelLike.hashCode ^
         reelComment.hashCode ^
