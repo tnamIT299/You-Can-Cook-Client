@@ -214,4 +214,89 @@ class ReelService {
       throw Exception('Failed to delete reel: $e');
     }
   }
+
+  // Fetch comments for a reel
+  Future<List<Map<String, dynamic>>> fetchReelComments(
+    int reelId, {
+    int limit = 10,
+    int offset = 0,
+  }) async {
+    try {
+      final response = await _supabase
+          .from('reel_comments')
+          .select('*,  users!uid(avatar, nickname, name, uid)')
+          .eq('reel_id', reelId)
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+      print('Raw response from Supabase: $response');
+
+      return (response as List<dynamic>).cast<Map<String, dynamic>>();
+    } catch (e) {
+      throw Exception('Failed to fetch reel comments: $e');
+    }
+  }
+
+  // Add a new comment to a reel
+  Future<void> addComment({
+    required int userId,
+    required int reelId,
+    required String content,
+    String? gifUrl,
+  }) async {
+    try {
+      await _supabase.from('reel_comments').insert({
+        'uid': userId,
+        'reel_id': reelId,
+        'content': content,
+        'gifURL': gifUrl,
+        'created_at': DateTime.now().toIso8601String(),
+        'like_count': 0,
+      });
+    } catch (e) {
+      throw Exception('Failed to add comment: $e');
+    }
+  }
+
+  // Update comment count for a reel
+  Future<void> updateReelCommentCount(
+    int reelId, {
+    required bool increment,
+  }) async {
+    try {
+      final reel =
+          await _supabase
+              .from('reels')
+              .select('reelComment')
+              .eq('reel_id', reelId)
+              .single();
+
+      final newCommentCount = (reel['reelComment'] ?? 0) + (increment ? 1 : -1);
+      await _supabase
+          .from('reels')
+          .update({'reelComment': newCommentCount})
+          .eq('reel_id', reelId);
+    } catch (e) {
+      throw Exception('Failed to update reel comment count: $e');
+    }
+  }
+
+  // Update like count for a comment
+  Future<void> updateCommentLike(int commentId, bool isLiked) async {
+    try {
+      final comment =
+          await _supabase
+              .from('reel_comments')
+              .select('like_count')
+              .eq('id', commentId)
+              .single();
+
+      final newLikeCount = (comment['like_count'] ?? 0) + (isLiked ? 1 : -1);
+      await _supabase
+          .from('reel_comments')
+          .update({'like_count': newLikeCount})
+          .eq('id', commentId);
+    } catch (e) {
+      throw Exception('Failed to update comment like count: $e');
+    }
+  }
 }

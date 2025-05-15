@@ -6,6 +6,10 @@ import 'package:you_can_cook/models/Reel.dart';
 import 'package:you_can_cook/services/ReelService.dart';
 import 'package:you_can_cook/screens/Main/sub_screens/reel/create_reel.dart';
 import 'package:you_can_cook/services/UserService.dart';
+import 'package:flutter_redux/flutter_redux.dart';
+import 'package:you_can_cook/redux/reducers.dart';
+import 'package:you_can_cook/redux/actions.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 class ReelTab extends StatefulWidget {
   final List<String>? initialVideos;
@@ -43,6 +47,17 @@ class _ReelTabState extends State<ReelTab> {
     _reelsFuture = Future.value([]);
     print('uidReeltab: ${widget.currentUserUid}');
     _pageController = PageController(initialPage: widget.initialIndex ?? 0);
+
+    // Gọi FetchUserInfo để lấy thông tin người dùng
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final store = StoreProvider.of<AppState>(context, listen: false);
+      final currentUser = firebase_auth.FirebaseAuth.instance.currentUser;
+      if (currentUser != null && currentUser.email != null) {
+        store.dispatch(FetchUserInfo(currentUser.email!));
+      } else {
+        debugPrint("Không có người dùng đăng nhập hoặc email bị thiếu.");
+      }
+    });
 
     if (widget.currentUserUid != null) {
       _currentUserUid = int.tryParse(widget.currentUserUid!);

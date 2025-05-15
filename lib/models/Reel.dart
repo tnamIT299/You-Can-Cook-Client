@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 
 class Reel {
   final int? reel_id;
-  final int uid;
+  final int? uid;
   final String? reelContent;
   final String reelUrl;
   final String? thumbnailUrl;
@@ -21,7 +21,7 @@ class Reel {
   final bool? isWarning;
   Reel({
     this.reel_id,
-    required this.uid,
+    this.uid,
     this.reelContent,
     required this.reelUrl,
     this.thumbnailUrl,
