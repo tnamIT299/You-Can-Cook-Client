@@ -234,7 +234,9 @@ class _CardReelState extends State<CardReel> {
                                                 as ImageProvider,
                                   ),
                                   title: Text(
-                                    liker['nickname'],
+                                    liker['nickname'] ??
+                                        liker['name'] ??
+                                        'Anonymous',
                                     style: const TextStyle(color: Colors.white),
                                   ),
                                   subtitle: Text(

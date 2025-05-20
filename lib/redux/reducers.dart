@@ -13,6 +13,7 @@ class AppState {
   final List<String> userPhotos;
   final List<Reel> userVideos;
   final Map<int, List<Comment>> postComments;
+  final int totalLikes;
 
   AppState({
     this.userInfo,
@@ -23,6 +24,7 @@ class AppState {
     this.userPhotos = const [],
     this.userVideos = const [],
     this.postComments = const {},
+    this.totalLikes = 0,
   });
 
   AppState copyWith({
@@ -34,6 +36,7 @@ class AppState {
     List<String>? userPhotos,
     List<Reel>? userVideos,
     Map<int, List<Comment>>? postComments,
+    int? totalLikes,
   }) {
     return AppState(
       userInfo: userInfo ?? this.userInfo,
@@ -44,6 +47,7 @@ class AppState {
       userPhotos: userPhotos ?? this.userPhotos,
       userVideos: userVideos ?? this.userVideos,
       postComments: postComments ?? this.postComments,
+      totalLikes: totalLikes ?? this.totalLikes,
     );
   }
 }
@@ -103,6 +107,12 @@ AppState appReducer(AppState state, dynamic action) {
     }
     newComments[action.postId] = comments;
     return state.copyWith(postComments: newComments);
+  } else if (action is FetchTotalLikes) {
+    return state.copyWith(
+      totalLikes: action.totalLikes,
+      isLoading: false,
+      errorMessage: null,
+    );
   }
   return state;
 }

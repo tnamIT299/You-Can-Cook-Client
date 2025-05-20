@@ -9,6 +9,12 @@ class FetchUserInfo {
   FetchUserInfo(this.email);
 }
 
+class FetchTotalLikes {
+  final int totalLikes;
+
+  FetchTotalLikes(this.totalLikes);
+}
+
 class UpdateUserInfo {
   final String email;
   final Map<String, dynamic> updates;

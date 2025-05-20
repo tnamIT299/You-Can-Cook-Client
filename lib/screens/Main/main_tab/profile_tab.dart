@@ -43,6 +43,13 @@ class _ProfileTabState extends State<ProfileTab>
       final profileUserInfo = store.state.profileUserInfo;
       if (profileUserInfo != null && profileUserInfo.uid != null) {
         store.dispatch(FetchUserPostsAndPhotos(profileUserInfo.uid));
+        final userService = UserService();
+        try {
+          final totalLikes = await userService.getTotalLikes(widget.userId);
+          store.dispatch(FetchTotalLikes(totalLikes));
+        } catch (e) {
+          store.dispatch(SetError('Failed to fetch total likes: $e'));
+        }
       } else {
         debugPrint(
           "Profile user info is null or UID is missing for userId: ${widget.userId}",
@@ -73,6 +80,13 @@ class _ProfileTabState extends State<ProfileTab>
     if (profileUserInfo != null && profileUserInfo.uid != null) {
       store.dispatch(FetchUserPostsAndPhotos(profileUserInfo.uid));
       store.dispatch(FetchProfileUserInfo(profileUserInfo.uid));
+      final userService = UserService();
+      try {
+        final totalLikes = await userService.getTotalLikes(profileUserInfo.uid);
+        store.dispatch(FetchTotalLikes(totalLikes));
+      } catch (e) {
+        store.dispatch(SetError('Failed to fetch total likes: $e'));
+      }
     } else {
       debugPrint("Profile UID is null, cannot refresh data.");
     }
@@ -277,7 +291,7 @@ class _ProfileTabState extends State<ProfileTab>
                                       "Follower",
                                       userInfo.follower ?? 0,
                                     ),
-                                    _buildStatColumn("Thích", 0),
+                                    _buildStatColumn("Thích", state.totalLikes),
                                     _buildStatColumn(
                                       "Bài đăng",
                                       state.userPosts.length,

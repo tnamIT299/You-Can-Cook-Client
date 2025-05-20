@@ -219,4 +219,35 @@ class UserService {
       response.map((user) => userModel.User.fromMap(user)),
     );
   }
+
+  Future<int> getTotalLikes(int uid) async {
+    try {
+      // Lấy tổng số lượt like từ bảng posts
+      final postResponse = await _supabase
+          .from('posts')
+          .select('plike')
+          .eq('uid', uid);
+
+      int totalPostLikes = 0;
+      for (var post in postResponse) {
+        totalPostLikes += (post['plike'] as int?) ?? 0;
+      }
+
+      // Lấy tổng số lượt like từ bảng reels
+      final reelResponse = await _supabase
+          .from('reels')
+          .select('reelLike')
+          .eq('uid', uid);
+
+      int totalReelLikes = 0;
+      for (var reel in reelResponse) {
+        totalReelLikes += (reel['reelLike'] as int?) ?? 0;
+      }
+
+      // Tổng hợp số lượt like
+      return totalPostLikes + totalReelLikes;
+    } catch (e) {
+      throw Exception('Failed to fetch total likes: $e');
+    }
+  }
 }
