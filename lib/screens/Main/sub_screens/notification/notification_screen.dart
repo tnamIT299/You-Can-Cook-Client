@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:you_can_cook/screens/Main/main_tab/reel_tab.dart';
 import 'package:you_can_cook/services/NotificationService.dart';
 import 'package:you_can_cook/screens/Main/sub_screens/post/detail_post.dart';
 import 'package:you_can_cook/models/Post.dart';
@@ -9,6 +10,7 @@ import 'dart:convert';
 import 'package:you_can_cook/widgets/loading_screen.dart';
 import 'package:you_can_cook/models/Notification.dart';
 import 'package:you_can_cook/screens/Main/main_tab/profile_tab.dart';
+import 'package:you_can_cook/services/ReelService.dart';
 
 class NotificationsScreen extends StatefulWidget {
   final int userId; // uid của người dùng
@@ -26,6 +28,7 @@ class NotificationsScreen extends StatefulWidget {
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
   late NotificationService notificationService;
+  late ReelService reelService;
   List<Map<String, dynamic>>? notifications;
   bool isLoading = true;
   String? error;
@@ -34,6 +37,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   void initState() {
     super.initState();
     notificationService = NotificationService(widget.supabaseClient);
+    reelService = ReelService();
     _loadNotifications();
   }
 
@@ -204,6 +208,62 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                   ),
                             ),
                           );
+                        }
+                        if (notification['type'] == 'comment_reel' ||
+                            notification['type'] == 'reel_like') {
+                          try {
+                            final reelId = notification['reelId'];
+                            final reelOwnerUid = notification['receiver_uid'];
+                            print('reelId: $reelId');
+                            print('reelOwnerUid: $reelOwnerUid');
+
+                            if (reelId == null || reelOwnerUid == null) {
+                              throw Exception(
+                                'Thiếu reel_id hoặc reel owner UID',
+                              );
+                            }
+
+                            final videos = await reelService.fetchVideosByUid(
+                              reelOwnerUid,
+                            );
+
+                            final targetReel = await reelService.fetchReelById(
+                              reelId,
+                            );
+
+                            if (targetReel == null) {
+                              throw Exception('Không tìm thấy reel');
+                            }
+
+                            final videoUrls =
+                                videos.map((reel) => reel.reelUrl).toList();
+
+                            int initialIndex = videos.indexWhere(
+                              (reel) => reel.reel_id == reelId,
+                            );
+                            if (initialIndex == -1) {
+                              videos.insert(0, targetReel);
+                              videoUrls.insert(0, targetReel.reelUrl);
+                              initialIndex = 0;
+                            }
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => ReelTab(
+                                      initialVideos: videoUrls,
+                                      initialIndex: initialIndex,
+                                      currentUserUid: widget.userId.toString(),
+                                    ),
+                              ),
+                            );
+                          } catch (e) {
+                            print(e);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Lỗi khi tải video: $e')),
+                            );
+                          }
                         }
 
                         if (notification['pid'] != null) {

@@ -92,35 +92,18 @@ class PostService {
 
   Future<void> deletePost(int postId) async {
     try {
-      // Bắt đầu một transaction
-      //await _client.rpc('begin_transaction');
-
       // 1. Xóa tất cả các báo cáo liên quan đến bài viết này
       await _client.from('userReport').delete().eq('pid', postId);
 
       // 2. Xóa tất cả các like liên quan đến bài viết này
-      // await _client
-      //     .from('likes')
-      //     .delete()
-      //     .eq('post_id', postId);
-
-      // // 3. Xóa tất cả các comment liên quan đến bài viết này
-      // await _client
-      //     .from('comments')
-      //     .delete()
-      //     .eq('post_id', postId);
-
-      // // 4. Xóa tất cả các bookmark liên quan đến bài viết này
-      // await _client
-      //     .from('bookmarks')
-      //     .delete()
-      //     .eq('post_id', postId);
+      await _client.from('likes').delete().eq('pid', postId);
+      //3. Xóa tất cả các comment liên quan đến bài viết này
+      await _client.from('comments').delete().eq('pid', postId);
+      // 4. Xóa tất cả các bookmark liên quan đến bài viết này
+      await _client.from('notifications').delete().eq('pid', postId);
 
       // 5. Cuối cùng xóa bài viết
       await _client.from('posts').delete().eq('pid', postId);
-
-      // Kết thúc transaction
-      // await _client.rpc('commit_transaction');
     } catch (e) {
       // Nếu có lỗi, rollback transaction
       //await _client.rpc('rollback_transaction');

@@ -1,101 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'package:cached_network_image/cached_network_image.dart';
-// import 'package:timeago/timeago.dart' as timeago;
-
-// class CardCommentReel extends StatelessWidget {
-//   final Map<String, dynamic> comment;
-//   final VoidCallback? onLike;
-
-//   const CardCommentReel({super.key, required this.comment, this.onLike});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final createdAt = DateTime.parse(comment['created_at']);
-//     final relativeTime = timeago.format(createdAt, locale: 'vi');
-//     print(comment);
-
-//     return Padding(
-//       padding: const EdgeInsets.symmetric(vertical: 8.0),
-//       child: Row(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           CircleAvatar(
-//             radius: 20,
-//             backgroundImage:
-//                 comment['users']?['avatar'] != null
-//                     ? NetworkImage(comment['users']?['avatar'])
-//                     : const AssetImage('assets/icons/logo.png')
-//                         as ImageProvider,
-//           ),
-//           const SizedBox(width: 10),
-//           Expanded(
-//             child: Column(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 Text(
-//                   comment['users']?['nickname'] ??
-//                       comment['users']?['name'] ??
-//                       'Anonymous',
-//                   style: const TextStyle(
-//                     color: Colors.white,
-//                     fontWeight: FontWeight.bold,
-//                   ),
-//                 ),
-//                 const SizedBox(height: 4),
-//                 if (comment['content'] != null && comment['content'].isNotEmpty)
-//                   Text(
-//                     comment['content'],
-//                     style: const TextStyle(color: Colors.white),
-//                   ),
-//                 if (comment['gifURL'] != null && comment['gifURL'].isNotEmpty)
-//                   Padding(
-//                     padding: const EdgeInsets.only(top: 4.0),
-//                     child: CachedNetworkImage(
-//                       imageUrl: comment['gifURL'],
-//                       height: 100,
-//                       fit: BoxFit.cover,
-//                       placeholder:
-//                           (context, url) => const CircularProgressIndicator(),
-//                       errorWidget:
-//                           (context, url, error) => const Icon(Icons.error),
-//                     ),
-//                   ),
-//                 const SizedBox(height: 4),
-//                 Row(
-//                   children: [
-//                     Text(
-//                       relativeTime,
-//                       style: const TextStyle(color: Colors.grey, fontSize: 12),
-//                     ),
-//                     const SizedBox(width: 10),
-//                     IconButton(
-//                       icon: Icon(
-//                         comment['isLiked'] == true
-//                             ? Icons.favorite
-//                             : Icons.favorite_border,
-//                         color:
-//                             comment['isLiked'] == true
-//                                 ? Colors.red
-//                                 : Colors.white,
-//                         size: 20,
-//                       ),
-//                       onPressed: onLike,
-//                     ),
-//                     Text(
-//                       '${comment['like_count'] ?? 0}',
-//                       style: const TextStyle(color: Colors.white, fontSize: 12),
-//                     ),
-//                   ],
-//                 ),
-//               ],
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -127,18 +29,6 @@ class CardCommentReel extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: const Icon(Icons.edit, color: Colors.white),
-                  title: const Text(
-                    'Chỉnh sửa bình luận',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    // Mở dialog chỉnh sửa
-                    _showEditDialog(context);
-                  },
-                ),
-                ListTile(
                   leading: const Icon(Icons.delete, color: Colors.red),
                   title: const Text(
                     'Xóa bình luận',
@@ -162,7 +52,9 @@ class CardCommentReel extends StatelessWidget {
                                 onPressed: () => Navigator.pop(context, true),
                                 child: const Text(
                                   'Xóa',
-                                  style: TextStyle(color: Colors.red),
+                                  style: TextStyle(
+                                    color: Color.fromARGB(255, 218, 3, 3),
+                                  ),
                                 ),
                               ),
                             ],
@@ -200,7 +92,7 @@ class CardCommentReel extends StatelessWidget {
                   ),
                   onTap: () {
                     Navigator.pop(context);
-                    // Mở dialog chỉnh sửa
+                    // Mở dialog báo cáo
                   },
                 ),
               ],
@@ -296,7 +188,7 @@ class CardCommentReel extends StatelessWidget {
                         ),
                         onPressed: () => _showOptionsMenu(context),
                       ),
-                    if (isCommentOwner == false)
+                    if (!isCommentOwner)
                       IconButton(
                         icon: const Icon(
                           Icons.more_horiz,

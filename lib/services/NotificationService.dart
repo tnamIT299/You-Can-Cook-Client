@@ -16,7 +16,7 @@ class NotificationService {
       final response = await supabaseClient
           .from('notifications')
           .select('''
-                id, receiver_uid, sender_uid, type, pid, content, is_read, created_at, updated_at,
+                id, receiver_uid, sender_uid, type, pid, reelId, content, is_read, created_at, updated_at,
                 actor:users!sender_uid(name, nickname, avatar),
                 receiver:users!receiver_uid(name, nickname, avatar),
                 post:posts!pid(uid, pcontent, pimage, createAt, phashtag, plike, pcomment, psave , post_owner:users!uid(name, nickname, avatar))

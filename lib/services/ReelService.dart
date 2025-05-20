@@ -70,6 +70,22 @@ class ReelService {
     }
   }
 
+  Future<Reel?> fetchReelById(int reelId) async {
+    try {
+      final response =
+          await _supabase
+              .from('reels')
+              .select('*, users(nickname, avatar, name)')
+              .eq('reel_id', reelId)
+              .maybeSingle();
+
+      if (response == null) return null;
+      return Reel.fromMap(response);
+    } catch (e) {
+      throw Exception('Failed to fetch reel by ID: $e');
+    }
+  }
+
   Future<List<Reel>> fetchReelsByUrls(
     List<String> videoUrls, {
     int limit = 5,
@@ -201,6 +217,17 @@ class ReelService {
               .eq('reel_id', reelId)
               .single();
 
+      final likedReel = await _supabase
+          .from('reel_likes')
+          .delete()
+          .eq('reel_id', reelId)
+          .eq('uid', uid);
+      final notiReel = await _supabase
+          .from('notifications')
+          .delete()
+          .eq('reelId', reelId)
+          .eq('sender_uid', uid);
+
       // Xóa video trong bucket
       final reelUrl = reel['reelUrl'] as String;
       // Phân tích reelUrl để lấy tên file (phần cuối của URL)
@@ -252,6 +279,39 @@ class ReelService {
         'created_at': DateTime.now().toIso8601String(),
         'like_count': 0,
       });
+      // Lấy thông tin bài viết để tìm chủ bài viết
+      final reelResponse =
+          await _supabase
+              .from('reels')
+              .select('uid')
+              .eq('reel_id', reelId)
+              .single();
+
+      // Lấy thông tin người bình luận
+      final actorResponse =
+          await _supabase
+              .from('users')
+              .select('name, nickname')
+              .eq('uid', userId)
+              .single();
+
+      // Tạo thông báo cho chủ bài viết nếu người bình luận không phải là họ
+      if (reelResponse['uid'] != userId) {
+        await _supabase.from('notifications').insert({
+          'receiver_uid': reelResponse['uid'],
+          'sender_uid': userId,
+          'type': 'comment_reel',
+          'reelId': reelId,
+          'content':
+              '${actorResponse['nickname'] ?? actorResponse['name']} đã bình luận trên video của bạn: "${gifUrl != null
+                  ? 'GIF'
+                  : content.length > 50
+                  ? '${content.substring(0, 50)}...'
+                  : content}"',
+          'is_read': false,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      }
     } catch (e) {
       throw Exception('Failed to add comment: $e');
     }
@@ -297,6 +357,18 @@ class ReelService {
           .eq('id', commentId);
     } catch (e) {
       throw Exception('Failed to update comment like count: $e');
+    }
+  }
+
+  Future<void> deleteComment(int commentId, int reelId) async {
+    try {
+      // Xóa bình luận từ bảng reel_comments
+      await _supabase.from('reel_comments').delete().eq('id', commentId);
+
+      // Cập nhật số lượng bình luận trong bảng reels
+      await updateReelCommentCount(reelId, increment: false);
+    } catch (e) {
+      throw Exception('Failed to delete comment: $e');
     }
   }
 }
