@@ -291,7 +291,10 @@ class _ProfileTabState extends State<ProfileTab>
                                       "Follower",
                                       userInfo.follower ?? 0,
                                     ),
-                                    _buildStatColumn("Thích", state.totalLikes),
+                                    _buildStatColumn(
+                                      "Lượt thích",
+                                      state.totalLikes,
+                                    ),
                                     _buildStatColumn(
                                       "Bài đăng",
                                       state.userPosts.length,
@@ -461,9 +464,12 @@ class _ProfileTabState extends State<ProfileTab>
       children: [
         Text(
           value.toString(),
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
         ),
-        Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+        ),
       ],
     );
   }
