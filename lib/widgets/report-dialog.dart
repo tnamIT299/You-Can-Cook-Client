@@ -38,8 +38,7 @@ class _ReportDialogState extends State<ReportDialog> {
 
     try {
       await _userService.reportUser(
-        reporterUid:
-            widget.reporterUid, // UID của người báo cáo (người dùng hiện tại)
+        reporterUid: widget.reporterUid,
         reportedUid: widget.reportedUid,
         content: _reportController.text.trim(),
         pid: widget.pid,

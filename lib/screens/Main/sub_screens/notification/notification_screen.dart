@@ -266,7 +266,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           }
                         }
 
-                        if (notification['pid'] != null) {
+                        if (notification['pid'] != null ||
+                            (notification['pid'] != null &&
+                                notification['type'] == 'system')) {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -407,7 +409,7 @@ class _NotificationCardState extends State<NotificationCard>
                   child: CircleAvatar(
                     radius: 25,
                     backgroundImage:
-                        widget.notification['actor']['avatar']?.isNotEmpty ==
+                        widget.notification['actor']?['avatar']?.isNotEmpty ==
                                 true
                             ? NetworkImage(
                               widget.notification['actor']['avatar'],
