@@ -931,9 +931,7 @@ class _CardReelState extends State<CardReel> {
                             Navigator.pop(context);
                           }
                         } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Lỗi khi xóa reel: $e')),
-                          );
+                          if (mounted) {}
                         }
                       }
                     },

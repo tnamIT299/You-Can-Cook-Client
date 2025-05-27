@@ -294,7 +294,7 @@ class _CardPostState extends State<CardPost> {
                                     Icons.report,
                                     color: Colors.red,
                                   ),
-                                  title: const Text("Báo cáo người dùng "),
+                                  title: const Text("Báo cáo bài viết "),
                                   onTap: () {
                                     Navigator.pop(context);
                                     _showReportDialog();

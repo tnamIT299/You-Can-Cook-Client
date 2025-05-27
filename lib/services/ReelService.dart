@@ -220,14 +220,19 @@ class ReelService {
       final likedReel = await _supabase
           .from('reel_likes')
           .delete()
-          .eq('reel_id', reelId)
-          .eq('uid', uid);
+          .eq('reel_id', reelId);
+      final commentReel = await _supabase
+          .from('reel_comments')
+          .delete()
+          .eq('reel_id', reelId);
+      final reelReport = await _supabase
+          .from('userReport')
+          .delete()
+          .eq('reel_id', reelId);
       final notiReel = await _supabase
           .from('notifications')
           .delete()
-          .eq('reelId', reelId)
-          .eq('sender_uid', uid);
-
+          .eq('reelId', reelId);
       // Xóa video trong bucket
       final reelUrl = reel['reelUrl'] as String;
       // Phân tích reelUrl để lấy tên file (phần cuối của URL)

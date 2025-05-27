@@ -210,7 +210,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           );
                         }
                         if (notification['type'] == 'comment_reel' ||
-                            notification['type'] == 'reel_like') {
+                            notification['type'] == 'reel_like' ||
+                            (notification['reelId'] != null &&
+                                notification['type'] == 'system')) {
                           try {
                             final reelId = notification['reelId'];
                             final reelOwnerUid = notification['receiver_uid'];
