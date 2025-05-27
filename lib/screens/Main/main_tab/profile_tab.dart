@@ -13,6 +13,7 @@ import 'package:you_can_cook/utils/color.dart';
 import 'package:you_can_cook/services/FollowerService.dart';
 import 'package:you_can_cook/services/UserService.dart';
 import 'package:you_can_cook/widgets/card_reel_profile.dart';
+import 'package:you_can_cook/widgets/report-user-dialog.dart';
 
 class ProfileTab extends StatefulWidget {
   final int userId;
@@ -266,6 +267,25 @@ class _ProfileTabState extends State<ProfileTab>
                                                         userInfo: userInfo,
                                                       ),
                                             ),
+                                          );
+                                        },
+                                      ),
+                                    if (!isOwnProfile)
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.flag,
+                                          color: Colors.grey,
+                                        ),
+                                        onPressed: () {
+                                          showDialog(
+                                            context: context,
+                                            builder:
+                                                (context) => ReportDialog(
+                                                  reportedUid:
+                                                      widget.userId.toString(),
+                                                  reporterUid:
+                                                      currentUserUid.toString(),
+                                                ),
                                           );
                                         },
                                       ),
