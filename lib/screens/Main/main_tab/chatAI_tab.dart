@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_redux/flutter_redux.dart';
 import 'package:you_can_cook/utils/color.dart';
-import 'package:you_can_cook/redux/reducers.dart';
 import 'package:you_can_cook/services/ConversationService.dart';
 import 'package:you_can_cook/services/UserService.dart';
-import 'package:you_can_cook/screens/Main/sub_screens/chat/chat_screen.dart'; // Import màn hình mới
+import 'package:you_can_cook/screens/Main/sub_screens/chat/chat_screen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ChatAI_Tab extends StatefulWidget {
   const ChatAI_Tab({super.key});
@@ -54,9 +54,23 @@ class _ChatAI_TabState extends State<ChatAI_Tab> with TickerProviderStateMixin {
     }
   }
 
-  Future<String> getBotResponse(String question) async {
-    await Future.delayed(Duration(seconds: 1)); // Giả lập độ trễ của API
-    return "Đây là phản hồi cho: $question";
+  Future<Map<String, dynamic>> _callChatbotApi(String message) async {
+    try {
+      final response = await http.post(
+        Uri.parse(
+          'http://192.168.43.92:5000/api/chat',
+        ), // Thay bằng địa chỉ API của bạn
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"query": message}),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        return {"response": "Có lỗi xảy ra!", "recipes": []};
+      }
+    } catch (e) {
+      return {"response": "Không kết nối được!", "recipes": []};
+    }
   }
 
   @override
@@ -113,17 +127,11 @@ class _ChatAI_TabState extends State<ChatAI_Tab> with TickerProviderStateMixin {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Icon chỉnh sửa
                     IconButton(
                       icon: Icon(Icons.edit, color: Colors.blue),
                       onPressed: () async {
-                        final TextEditingController
-                        titleController = TextEditingController(
-                          text:
-                              chat['question'], // Giá trị ban đầu là tiêu đề hiện tại
-                        );
-
-                        // Hiển thị hộp thoại chỉnh sửa
+                        final TextEditingController titleController =
+                            TextEditingController(text: chat['question']);
                         final newTitle = await showDialog<String>(
                           context: context,
                           builder:
@@ -164,12 +172,10 @@ class _ChatAI_TabState extends State<ChatAI_Tab> with TickerProviderStateMixin {
 
                         if (newTitle != null && newTitle.isNotEmpty) {
                           try {
-                            // Cập nhật tiêu đề cuộc hội thoại
                             await _conversationService.updateConversationTitle(
                               chat['id'],
                               newTitle,
                             );
-                            // Cập nhật lại danh sách lịch sử
                             await _fetchUidAndChatHistory();
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Đã cập nhật tiêu đề')),
@@ -182,7 +188,6 @@ class _ChatAI_TabState extends State<ChatAI_Tab> with TickerProviderStateMixin {
                         }
                       },
                     ),
-                    // Icon xóa
                     IconButton(
                       icon: Icon(Icons.delete, color: Colors.red),
                       onPressed: () async {
@@ -232,7 +237,7 @@ class _ChatAI_TabState extends State<ChatAI_Tab> with TickerProviderStateMixin {
                   ],
                 ),
                 onTap: () {
-                  Navigator.pop(context); // Đóng drawer
+                  Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -285,7 +290,7 @@ class _ChatAI_TabState extends State<ChatAI_Tab> with TickerProviderStateMixin {
                       ),
                       Positioned(
                         bottom: 15,
-                        right: 90, // Đẩy hình ảnh chatbot sang trái
+                        right: 90,
                         child: Image.asset(
                           'assets/images/ai.png',
                           width: 200,
@@ -295,7 +300,7 @@ class _ChatAI_TabState extends State<ChatAI_Tab> with TickerProviderStateMixin {
                       ),
                       Positioned(
                         top: 0,
-                        left: 80, // Bong bóng lời nói lệch hẳn sang phải
+                        left: 80,
                         child: Container(
                           constraints: BoxConstraints(
                             maxWidth: MediaQuery.of(context).size.width * 0.6,
@@ -387,15 +392,6 @@ class _ChatAI_TabState extends State<ChatAI_Tab> with TickerProviderStateMixin {
                                   question,
                                 );
                             if (conversationId != null) {
-                              final botResponse = await getBotResponse(
-                                question,
-                              );
-                              await _conversationService.addMessage(
-                                conversationId,
-                                'bot',
-                                {'text': botResponse},
-                                DateTime.now(),
-                              );
                               // Chuyển hướng sang ChatScreen
                               Navigator.push(
                                 context,
@@ -408,7 +404,7 @@ class _ChatAI_TabState extends State<ChatAI_Tab> with TickerProviderStateMixin {
                                 ),
                               );
                             }
-                            _fetchUidAndChatHistory(); // Cập nhật lịch sử trong drawer
+                            _fetchUidAndChatHistory(); // Cập nhật lịch sử
                           }
                         },
                       ),

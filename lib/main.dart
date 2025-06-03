@@ -47,7 +47,7 @@ class MyApp extends StatelessWidget {
         // useInheritedMediaQuery: true,
         // locale: DevicePreview.locale(context),
         // builder: DevicePreview.appBuilder,
-        title: 'Flutter Demo',
+        title: 'You Can Cook',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
           scaffoldBackgroundColor: AppColors.background,
