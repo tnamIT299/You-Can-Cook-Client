@@ -55,6 +55,12 @@ dependencies:
   video_thumbnail:
     path: ./android/video_thumbnail
   path_provider: ^2.1.5
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/logo.png"
 
 dev_dependencies:
   flutter_test:

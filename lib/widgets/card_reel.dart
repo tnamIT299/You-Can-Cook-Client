@@ -281,17 +281,13 @@ class _CardReelState extends State<CardReel> {
         widget.reel!.reel_id!,
         limit: _commentsToShow,
         offset: _offset,
+        currentUserId: int.parse(widget.currentUserUid!),
       );
 
       print('Fetched comments: $newComments');
 
-      final commentsWithLikeStatus =
-          newComments.map((comment) {
-            return {...comment, 'isLiked': false};
-          }).toList();
-
       setState(() {
-        _comments.addAll(commentsWithLikeStatus);
+        _comments.addAll(newComments);
         _offset += newComments.length;
         _hasMoreComments = newComments.length == _commentsToShow;
         _isLoadingComments = false;
@@ -318,11 +314,33 @@ class _CardReelState extends State<CardReel> {
       comment['isLiked'] = isLiked;
       comment['like_count'] = (comment['like_count'] ?? 0) + (isLiked ? 1 : -1);
     });
-    await _reelService.updateCommentLike(comment['id'], isLiked);
+
+    try {
+      if (isLiked) {
+        await _reelService.likeReelComment(
+          comment['id'],
+          int.parse(widget.currentUserUid!),
+        );
+      } else {
+        await _reelService.unlikeReelComment(
+          comment['id'],
+          int.parse(widget.currentUserUid!),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        comment['isLiked'] = !isLiked;
+        comment['like_count'] =
+            (comment['like_count'] ?? 0) + (isLiked ? -1 : 1);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi khi thay đổi trạng thái thích: $e')),
+      );
+    }
   }
 
   Future<void> _submitComment(dynamic userInfo) async {
-    if (_commentController.text.isEmpty && _selectedGifUrl == null ||
+    if (_commentController.text.trim().isEmpty && _selectedGifUrl == null ||
         userInfo?.uid == null ||
         widget.reel == null) {
       return;
@@ -345,7 +363,6 @@ class _CardReelState extends State<CardReel> {
         'avatar': userInfo.avatar,
         'nickname': userInfo.nickname ?? userInfo.name,
         'name': userInfo.name,
-        'like_count': 0,
         'isLiked': false,
         'users': {
           'uid': userInfo.uid,

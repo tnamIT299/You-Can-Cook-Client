@@ -217,6 +217,23 @@ class ReelService {
               .eq('reel_id', reelId)
               .single();
 
+      //Xoá phụ thuộc bảng reel_comment_like trước
+      final commentsResponse = await _supabase
+          .from('reel_comments')
+          .select('id')
+          .eq('reel_id', reelId);
+
+      List<int> commentIds =
+          (commentsResponse as List<dynamic>)
+              .map((comment) => comment['id'] as int)
+              .toList();
+      if (commentIds.isNotEmpty) {
+        await _supabase
+            .from('reel_comment_like')
+            .delete()
+            .inFilter('reel_comment_id', commentIds);
+      }
+      //Bắt đầu xoá các phụ thuộc liên quan
       final likedReel = await _supabase
           .from('reel_likes')
           .delete()
@@ -252,17 +269,40 @@ class ReelService {
     int reelId, {
     int limit = 10,
     int offset = 0,
+    required int currentUserId,
   }) async {
     try {
       final response = await _supabase
           .from('reel_comments')
-          .select('*,  users!uid(avatar, nickname, name, uid)')
+          .select('''
+            *,
+            users!uid(avatar, nickname, name, uid),
+            like_count:reel_comment_like(count),
+            user_likes:reel_comment_like!left(id, user_id).eq(user_id, $currentUserId)
+          ''')
           .eq('reel_id', reelId)
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
-      print('Raw response from Supabase: $response');
 
-      return (response as List<dynamic>).cast<Map<String, dynamic>>();
+      return response.map((comment) {
+        final likeCount =
+            (comment['like_count'] as List<dynamic>?)?.isNotEmpty == true
+                ? (comment['like_count'][0]['count'] as int?) ?? 0
+                : 0;
+        final userLikes = comment['user_likes'] as List<dynamic>?;
+        bool isLiked = false;
+
+        if (userLikes != null && userLikes.isNotEmpty) {
+          for (var like in userLikes) {
+            if (like['user_id'] == currentUserId) {
+              isLiked = true;
+              break;
+            }
+          }
+        }
+
+        return {...comment, 'like_count': likeCount, 'isLiked': isLiked};
+      }).toList();
     } catch (e) {
       throw Exception('Failed to fetch reel comments: $e');
     }
@@ -282,7 +322,6 @@ class ReelService {
         'content': content,
         'gifURL': gifUrl,
         'created_at': DateTime.now().toIso8601String(),
-        'like_count': 0,
       });
       // Lấy thông tin bài viết để tìm chủ bài viết
       final reelResponse =
@@ -367,6 +406,11 @@ class ReelService {
 
   Future<void> deleteComment(int commentId, int reelId) async {
     try {
+      // Xóa tất cả các like liên quan đến bình luận này
+      await _supabase
+          .from('reel_comment_like')
+          .delete()
+          .eq('reel_comment_id', commentId);
       // Xóa bình luận từ bảng reel_comments
       await _supabase.from('reel_comments').delete().eq('id', commentId);
 
@@ -374,6 +418,57 @@ class ReelService {
       await updateReelCommentCount(reelId, increment: false);
     } catch (e) {
       throw Exception('Failed to delete comment: $e');
+    }
+  }
+
+  //Reel_comment
+  /// Thích một bình luận trên reel
+  Future<void> likeReelComment(int reelCommentId, int userId) async {
+    try {
+      // Kiểm tra xem đã thích chưa
+      final existingLike = await _supabase
+          .from('reel_comment_like')
+          .select()
+          .eq('reel_comment_id', reelCommentId)
+          .eq('user_id', userId);
+
+      if (existingLike.isEmpty) {
+        await _supabase.from('reel_comment_like').insert({
+          'reel_comment_id': reelCommentId,
+          'user_id': userId,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      }
+    } catch (e) {
+      throw Exception('Failed to like reel comment: $e');
+    }
+  }
+
+  /// Bỏ thích một bình luận trên reel
+  Future<void> unlikeReelComment(int reelCommentId, int userId) async {
+    try {
+      await _supabase
+          .from('reel_comment_like')
+          .delete()
+          .eq('reel_comment_id', reelCommentId)
+          .eq('user_id', userId);
+    } catch (e) {
+      throw Exception('Failed to unlike reel comment: $e');
+    }
+  }
+
+  /// Kiểm tra xem người dùng đã thích bình luận hay chưa
+  Future<bool> hasLikedReelComment(int reelCommentId, int userId) async {
+    try {
+      final response = await _supabase
+          .from('reel_comment_like')
+          .select()
+          .eq('reel_comment_id', reelCommentId)
+          .eq('user_id', userId);
+
+      return response.isNotEmpty;
+    } catch (e) {
+      throw Exception('Failed to check like status: $e');
     }
   }
 }

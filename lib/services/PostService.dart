@@ -15,7 +15,7 @@ class PostService {
         .select(
           '*, users!posts_uid_fkey(name, nickname, avatar, uid)',
         ) // Join với bảng users
-        .order('createAt', ascending: false); // Sắp xếp theo thời gian mới nhất
+        .order('createAt', ascending: false);
     return (response as List<dynamic>)
         .map((post) => Post.fromMap(post))
         .toList();
@@ -92,21 +92,30 @@ class PostService {
 
   Future<void> deletePost(int postId) async {
     try {
-      // 1. Xóa tất cả các báo cáo liên quan đến bài viết này
+      //Xoá phụ thuộc comment_likes trước khi xoá comment
+      final commentsResponse = await _client
+          .from('comments')
+          .select('id')
+          .eq('pid', postId);
+
+      List<int> commentIds =
+          (commentsResponse as List<dynamic>)
+              .map((comment) => comment['id'] as int)
+              .toList();
+      if (commentIds.isNotEmpty) {
+        await _client
+            .from('comment_likes')
+            .delete()
+            .inFilter('comment_id', commentIds);
+      }
+      //Bắt đầu xoá các phục thuộc liên quan đến bài post
       await _client.from('userReport').delete().eq('pid', postId);
-
-      // 2. Xóa tất cả các like liên quan đến bài viết này
       await _client.from('likes').delete().eq('pid', postId);
-      //3. Xóa tất cả các comment liên quan đến bài viết này
       await _client.from('comments').delete().eq('pid', postId);
-      // 4. Xóa tất cả các bookmark liên quan đến bài viết này
       await _client.from('notifications').delete().eq('pid', postId);
-
-      // 5. Cuối cùng xóa bài viết
+      await _client.from('warningPost').delete().eq('pid', postId);
       await _client.from('posts').delete().eq('pid', postId);
     } catch (e) {
-      // Nếu có lỗi, rollback transaction
-      //await _client.rpc('rollback_transaction');
       throw Exception('Failed to delete post: $e');
     }
   }

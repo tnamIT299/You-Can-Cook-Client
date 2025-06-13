@@ -51,6 +51,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           widget.userInfo.uid.toString(),
         );
       }
+      //check null
+      if (_nameController.text.trim().isEmpty ||
+          _nicknameController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tên không được để trống')),
+        );
+        return;
+      }
 
       final updates = {
         'name': _nameController.text,

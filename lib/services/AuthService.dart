@@ -91,6 +91,10 @@ class AuthService {
     String password,
     String fullName,
   ) async {
+    if (email.isEmpty || password.isEmpty || fullName.isEmpty) {
+      return 'Vui lòng nhập đầy đủ thông tin';
+    }
+
     if (!isValidEmail(email)) {
       return 'Vui lòng nhập địa chỉ email hợp lệ';
     }

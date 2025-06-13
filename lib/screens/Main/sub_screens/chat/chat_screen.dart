@@ -8,6 +8,7 @@ import 'package:flutter_redux/flutter_redux.dart';
 import 'package:you_can_cook/redux/actions.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/services.dart';
 
 class ChatScreen extends StatefulWidget {
   final String conversationId;
@@ -258,6 +259,47 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  // Thêm method này vào class _ChatScreenState
+  void _copyMessage(String text) {
+    Clipboard.setData(ClipboardData(text: text));
+
+    // Hiển thị snackbar thông báo
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Đã sao chép tin nhắn'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  // Method hiển thị menu context (tùy chọn)
+  void _showMessageOptions(BuildContext context, String text) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.copy),
+                  title: const Text('Sao chép'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _copyMessage(text);
+                  },
+                ),
+                // Có thể thêm các tùy chọn khác như "Trả lời", "Chuyển tiếp"...
+              ],
+            ),
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return StoreConnector<AppState, String?>(
@@ -348,47 +390,60 @@ class _ChatScreenState extends State<ChatScreen> {
                                         ),
                                       if (!isUser) const SizedBox(width: 8),
                                       Flexible(
-                                        child: Container(
-                                          padding: const EdgeInsets.all(12.0),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                isUser
-                                                    ? AppColors.primary
-                                                    : Colors.grey[200],
-                                            borderRadius: BorderRadius.circular(
-                                              12,
+                                        child: GestureDetector(
+                                          onLongPress: () {
+                                            // Chỉ cho phép copy tin nhắn của user hoặc bot (không copy loading)
+                                            if (content['text'] != null &&
+                                                content['text']
+                                                    .toString()
+                                                    .isNotEmpty) {
+                                              _copyMessage(content['text']);
+                                            }
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.all(12.0),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  isUser
+                                                      ? AppColors.primary
+                                                      : Colors.grey[200],
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                             ),
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                isUser
-                                                    ? CrossAxisAlignment.end
-                                                    : CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                content['text'],
-                                                style: TextStyle(
-                                                  color:
-                                                      isUser
-                                                          ? Colors.white
-                                                          : Colors.black,
-                                                  fontSize: 16,
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  isUser
+                                                      ? CrossAxisAlignment.end
+                                                      : CrossAxisAlignment
+                                                          .start,
+                                              children: [
+                                                Text(
+                                                  content['text'],
+                                                  style: TextStyle(
+                                                    color:
+                                                        isUser
+                                                            ? Colors.white
+                                                            : Colors.black,
+                                                    fontSize: 16,
+                                                  ),
                                                 ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                DateFormat(
-                                                  'HH:mm, dd/MM/yyyy',
-                                                ).format(message['timestamp']),
-                                                style: TextStyle(
-                                                  color:
-                                                      isUser
-                                                          ? Colors.white70
-                                                          : Colors.grey[600],
-                                                  fontSize: 12,
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  DateFormat(
+                                                    'HH:mm, dd/MM/yyyy',
+                                                  ).format(
+                                                    message['timestamp'],
+                                                  ),
+                                                  style: TextStyle(
+                                                    color:
+                                                        isUser
+                                                            ? Colors.white70
+                                                            : Colors.grey[600],
+                                                    fontSize: 12,
+                                                  ),
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),

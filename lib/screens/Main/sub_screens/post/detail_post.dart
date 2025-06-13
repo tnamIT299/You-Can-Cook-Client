@@ -194,7 +194,7 @@ class _DetailPostScreenState extends State<DetailPostScreen> {
   }
 
   Future<void> _submitComment(dynamic userInfo) async {
-    if (_commentController.text.isEmpty && _selectedGifUrl == null ||
+    if (_commentController.text.trim().isEmpty && _selectedGifUrl == null ||
         userInfo?.uid == null) {
       return;
     }

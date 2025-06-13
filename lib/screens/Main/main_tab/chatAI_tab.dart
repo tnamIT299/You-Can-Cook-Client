@@ -383,7 +383,7 @@ class _ChatAI_TabState extends State<ChatAI_Tab> with TickerProviderStateMixin {
                       child: IconButton(
                         icon: const Icon(Icons.send, color: Colors.white),
                         onPressed: () async {
-                          if (_controller.text.isNotEmpty) {
+                          if (_controller.text.trim().isNotEmpty) {
                             final question = _controller.text;
                             _controller.clear();
                             final conversationId = await _conversationService
