@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:you_can_cook/widgets/report-user-dialog.dart';
 
 class CardCommentReel extends StatelessWidget {
   final Map<String, dynamic> comment;
@@ -87,12 +88,18 @@ class CardCommentReel extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.report, color: Colors.red),
                   title: const Text(
-                    'Báo cáo bình luận',
+                    'Báo cáo tài khoản',
                     style: TextStyle(color: Colors.red),
                   ),
                   onTap: () {
-                    Navigator.pop(context);
-                    // Mở dialog báo cáo
+                    showDialog(
+                      context: context,
+                      builder:
+                          (context) => ReportDialog(
+                            reportedUid: comment['uid'].toString(),
+                            reporterUid: currentUserUid.toString(),
+                          ),
+                    );
                   },
                 ),
               ],
