@@ -47,7 +47,7 @@ You Can Cook là một ứng dụng di động giúp người dùng chia sẻ, k
 </div>
 ---
 
-## Tải xuống APK
+## 🔗 Tải xuống APK
 
 Bạn có thể tải file APK mới nhất từ [GitHub Releases](https://github.com/tnamIT299/You-Can-Cook-Client/releases).
 
@@ -55,4 +55,4 @@ Bạn có thể tải file APK mới nhất từ [GitHub Releases](https://githu
 
 ## 📄 Giấy phép
 
-Phát hành theo giấy phép MIT. Xem chi tiết tại [LICENSE](LICENSE).
+[LICENSE](LICENSE).
