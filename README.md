@@ -34,6 +34,12 @@ You Can Cook là một ứng dụng di động giúp người dùng chia sẻ, k
 
 ---
 
+## 🗺️ Mô hình luồng hoạt động của RAG
+
+![Workflow](image/RAG.png)
+
+---
+
 ## 📱Giao diện chính trong ứng dụng
 
 <div style="display: flex; justify-content: space-around;">
