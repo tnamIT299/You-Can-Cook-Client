@@ -52,6 +52,7 @@ You Can Cook là một ứng dụng di động giúp người dùng chia sẻ, k
     <img src="image/chat_screen_1.png" width="200" />
      <img src="image/chat_screen_2.png" width="200" />
        <img src="image/BXH.png" width="200" />
+       <img src="image/profile.png" width="200" />
   
 </div>
 
