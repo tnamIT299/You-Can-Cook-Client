@@ -43,7 +43,10 @@ You Can Cook là một ứng dụng di động giúp người dùng chia sẻ, k
 ## 📱Giao diện chính trong ứng dụng
 
 <div style="display: flex; justify-content: space-around;">
-  <img src="image/home.png" width="200" style="margin-right: 20px;" />
+  <img src="image/splash.png" width="200" style="margin-right: 20px;" />
+  <img src="image/sign-up.png" width="200" />
+  <img src="image/log-in.png" width="200" />
+  <img src="image/reel.png" width="200" />
   <img src="image/reel.png" width="200" />
    <img src="image/explore.png" width="200" />
     <img src="image/chat_screen_1.png" width="200" />

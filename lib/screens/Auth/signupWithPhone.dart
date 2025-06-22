@@ -14,7 +14,7 @@ class _SignUpWithPhoneScreenState extends State<SignUpWithPhoneScreen> {
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _otpController = TextEditingController();
-  final bool _obscurePassword = true;
+  // final bool _obscurePassword = true;
   String _errorMessage = '';
   String? _verificationId;
   bool _isCodeSent = false;
